@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Marquee-Plus
-Version: 4.4
+Version: 4.5
 Description: Allows you to put Rotating Marquee's In your Posts and Pages. I will appreciate if you will give me queries and suggestions regarding this plugin.
 Author: Know How Media
 Author URI: http://www.khmedia.in
@@ -113,7 +113,7 @@ function marqueeplus_process($content)
 }
 
 function marqueeplus_optionspage(){
-	$version_mp = 4.4;
+	$version_mp = 4.5;
 	if($_POST['marqueeplus_save']){
 		$options = array (
 			'marqueeplus_nrc_text1',
@@ -200,7 +200,6 @@ function marqueeplus_optionspage(){
 		<p>Why don't you write a post about marquee-plus at <a href='http://www.khmedia.in'>Know How Media</a></p>
 		<h3>Problems, Questions, Suggestions ?</h3>
 		<p>Catch me at <a href="http://www.khmedia.in/contact-us" target="_blank">Contact Author</a>.</p>
-		<p>You can also visit our <a href="http://www.khmedia.in/forum" target="_blank">Community</a> for any queries.</p>
         </td>
         </tr>
 		</table>
@@ -271,7 +270,7 @@ Please do not remove the link provided below. If you liked this plugin then I re
 function marqueeplus_footer()
 {
 ?>
-<small><center><strong><a href="http://www.petelower.com/" target='_blank'></a> <strong><a href="http://www.i9mh.com" target='_blank'></a></strong></center></small>
+<small><center>Marquee Powered By <strong><a href="http://www.khmedia.in" target='_blank'>Know How Media</a>.</strong></center></small>
 <?php
 }
 

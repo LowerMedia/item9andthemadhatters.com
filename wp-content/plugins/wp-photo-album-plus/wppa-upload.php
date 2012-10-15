@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains all the upload/import pages and functions
-* Version 4.5.5
+* Version 4.7.18
 *
 */
 
@@ -19,7 +19,7 @@ global $wppa_revno;
 	wppa_cleanup_photos();
 	wppa_sanitize_files();
 
-	if ( $wppa_opt['wppa_watermark_on'] == 'yes' && $wppa_opt['wppa_watermark_user'] == 'yes') {
+	if ( $wppa_opt['wppa_watermark_on'] == 'yes' && ( $wppa_opt['wppa_watermark_user'] == 'yes' || current_user_can('wppa_settings') ) ) {
 		if ( isset( $_POST['wppa-watermark-file'] ) ) update_option('wppa_watermark_file_'.$user, $_POST['wppa-watermark-file']);
 		if ( isset( $_POST['wppa-watermark-pos'] ) ) update_option('wppa_watermark_pos_'.$user, $_POST['wppa-watermark-pos']);
 	}
@@ -28,10 +28,18 @@ global $wppa_revno;
 	if ( isset( $_POST['wppa-upload-multiple'] ) ) {
 		check_admin_referer( '$wppa_nonce', WPPA_NONCE );
 		wppa_upload_multiple();
+		if ( isset( $_POST['wppa-go-edit-multiple'] ) ) {
+			wppa_ok_message(__('Connecting to edit album...', 'wppa')); ?>
+			<script type="text/javascript">document.location = '<?php echo(wppa_dbg_url(get_admin_url().'admin.php?page=wppa_admin_menu&tab=edit&edit_id='.$_POST['wppa-album'], 'js')) ?>';</script>
+		<?php }
 	}
 	if ( isset( $_POST['wppa-upload'] ) ) {
 		check_admin_referer( '$wppa_nonce', WPPA_NONCE );
 		wppa_upload_photos();
+		if ( isset( $_POST['wppa-go-edit-single'] ) ) {
+			wppa_ok_message(__('Connecting to edit album...', 'wppa')); ?>
+			<script type="text/javascript">document.location = '<?php echo(wppa_dbg_url(get_admin_url().'admin.php?page=wppa_admin_menu&tab=edit&edit_id='.$_POST['wppa-album'], 'js')) ?>';</script>
+		<?php }
 	} 
 	if ( isset( $_POST['wppa-upload-zip'] ) ) {
 		check_admin_referer( '$wppa_nonce', WPPA_NONCE );
@@ -81,6 +89,7 @@ global $wppa_revno;
 			<?php echo(sprintf(__('<b>Notice:</b> your server allows you to upload <b>%s</b> files of maximum total <b>%s</b> bytes and allows <b>%s</b> seconds to complete.', 'wppa'), $max_files_txt, $max_size, $max_time)) ?>
 			<?php _e('If your request exceeds these limitations, it will fail, probably without an errormessage.', 'wppa') ?>
 			<?php _e('Additionally your hosting provider may have set other limitations on uploading files.', 'wppa') ?>
+			<?php echo '<br />'.wppa_check_memory_limit() ?>
 			</div>
 			<?php /* Multple photos */ ?>
 			<div style="border:1px solid #ccc; padding:10px; margin-bottom:10px; width: 600px;">
@@ -143,10 +152,10 @@ global $wppa_revno;
 						<label for="wppa-album"><?php _e('Album:', 'wppa'); ?> </label>
 						<select name="wppa-album" id="wppa-album">
 							<option value=""><?php _e('- select an album -', 'wppa') ?></option>
-							<?php echo(wppa_album_select()); ?>
+							<?php echo(wppa_album_select('', '', false, false, false, false, false, true)); ?>
 						</select>
 					</p>
-					<?php if ( $wppa_opt['wppa_watermark_on'] == 'yes' && $wppa_opt['wppa_watermark_user'] == 'yes' ) { ?>		
+					<?php if ( $wppa_opt['wppa_watermark_on'] == 'yes' && ( $wppa_opt['wppa_watermark_user'] == 'yes' || current_user_can('wppa_settings') ) ) { ?>		
 						<p>		
 							<?php _e('Apply watermark file:', 'wppa') ?>
 							<select name="wppa-watermark-file" id="wppa-watermark-file">
@@ -159,8 +168,12 @@ global $wppa_revno;
 							</select>
 						</p>
 					<?php } ?>
-					<input type="submit" class="button-primary" name="wppa-upload-multiple" value="<?php _e('Upload Multiple Photos', 'wppa') ?>" />					
-				</form>
+					<input type="submit" class="button-primary" name="wppa-upload-multiple" value="<?php _e('Upload Multiple Photos', 'wppa') ?>" />
+					<input type="checkbox" id="wppa-go-edit-multiple" name="wppa-go-edit-multiple" onchange="wppaCookieCheckbox(this, 'wppa-go-edit-multiple')" />&nbsp;
+					<script type="text/javascript" >
+						if ( wppa_getCookie('wppa-go-edit-multiple') == 'on' ) document.getElementById('wppa-go-edit-multiple').checked = 'checked';
+					</script>
+					<?php _e('After upload: Go to the <b>Edit Album</b> page.', 'wppa') ?>				</form>
 			</div>
 			<?php /* End multiple */ ?>
 
@@ -179,10 +192,10 @@ global $wppa_revno;
 						<label for="wppa-album"><?php _e('Album:', 'wppa'); ?> </label>
 						<select name="wppa-album" id="wppa-album">
 							<option value=""><?php _e('- select an album -', 'wppa') ?></option>
-							<?php echo(wppa_album_select()); ?>
+							<?php echo(wppa_album_select('', '', false, false, false, false, false, true)); ?>
 						</select>
 					</p>
-					<?php if ( $wppa_opt['wppa_watermark_on'] == 'yes' && $wppa_opt['wppa_watermark_user'] == 'yes' ) { ?>		
+					<?php if ( $wppa_opt['wppa_watermark_on'] == 'yes' && ( $wppa_opt['wppa_watermark_user'] == 'yes' || current_user_can('wppa_settings') ) ) { ?>		
 						<p>		
 							<?php _e('Apply watermark file:', 'wppa') ?>
 							<select name="wppa-watermark-file" id="wppa-watermark-file">
@@ -195,7 +208,13 @@ global $wppa_revno;
 							</select>
 						</p>
 					<?php } ?>
-					<input type="submit" class="button-primary" name="wppa-upload" value="<?php _e('Upload Single Photos', 'wppa') ?>" />					
+					<input type="submit" class="button-primary" name="wppa-upload" value="<?php _e('Upload Single Photos', 'wppa') ?>" />
+<input type="checkbox" id="wppa-go-edit-single" name="wppa-go-edit-single" onchange="wppaCookieCheckbox(this, 'wppa-go-edit-single')" />&nbsp;
+				
+<script type="text/javascript" >
+	if ( wppa_getCookie('wppa-go-edit-single') == 'on' ) document.getElementById('wppa-go-edit-single').checked = 'checked';
+</script>
+<?php _e('After upload: Go to the <b>Edit Album</b> page.', 'wppa') ?>	
 				</form>
 				<script type="text/javascript">
 				<!-- Create an instance of the multiSelector class, pass it the output target and the max number of files -->
@@ -216,7 +235,11 @@ global $wppa_revno;
 					<?php wp_nonce_field('$wppa_nonce', WPPA_NONCE); ?>
 						<input id="my_zipfile_element" type="file" name="file_zip" /><br/><br/>
 						<input type="submit" class="button-primary" name="wppa-upload-zip" value="<?php _e('Upload Zipped Photos', 'wppa') ?>" />
-						<input type="checkbox" name="wppa-go-import" checked="checked"><?php _e('After upload: Go to the <b>Import Photos</b> page.', 'wppa') ?></input>
+						<input type="checkbox" id="wppa-go-import" name="wppa-go-import" onchange="wppaCookieCheckbox(this, 'wppa-go-import')" />&nbsp;
+<script type="text/javascript" >
+	if ( wppa_getCookie('wppa-go-import') == 'on' ) document.getElementById('wppa-go-import').checked = 'checked';
+</script>
+						<?php _e('After upload: Go to the <b>Import Photos</b> page.', 'wppa') ?>
 					</form>
 				</div>
 			<?php }
@@ -248,7 +271,7 @@ global $wppa_revno;
 	$count = wppa_sanitize_files();
 	if ($count) wppa_error_message($count.' '.__('illegal files deleted.', 'wppa'));
 
-	if ( $wppa_opt['wppa_watermark_on'] == 'yes' && $wppa_opt['wppa_watermark_user'] == 'yes' ) {
+	if ( $wppa_opt['wppa_watermark_on'] == 'yes' && ( $wppa_opt['wppa_watermark_user'] == 'yes' || current_user_can('wppa_settings') ) ) {
 		if ( isset( $_POST['wppa-watermark-file'] ) ) update_option('wppa_watermark_file_'.$user, $_POST['wppa-watermark-file']);
 		if ( isset( $_POST['wppa-watermark-pos'] ) ) update_option('wppa_watermark_pos_'.$user, $_POST['wppa-watermark-pos']);
 	}
@@ -412,11 +435,11 @@ global $wppa_revno;
 				<?php _e('Default album for import:', 'wppa') ?>
 				<select name="wppa-album" id="wppa-album">
 					<option value=""><?php _e('- select an album -', 'wppa') ?></option>
-					<?php echo(wppa_album_select()) ?>
+					<?php echo(wppa_album_select('', '', false, false, false, false, false, true)) ?>
 				</select>
 				<?php _e('Photos that have (<em>name</em>)[<em>album</em>] will be imported by that <em>name</em> in that <em>album</em>.', 'wppa') ?>
 			</p>
-	<?php if ( $wppa_opt['wppa_watermark_on'] == 'yes' && $wppa_opt['wppa_watermark_user'] == 'yes' ) { ?>
+	<?php if ( $wppa_opt['wppa_watermark_on'] == 'yes' && ( $wppa_opt['wppa_watermark_user'] == 'yes' || current_user_can('wppa_settings') ) ) { ?>
 			<p>
 				<?php _e('Apply watermark file:', 'wppa') ?>
 				<select name="wppa-watermark-file" id="wppa-watermark-file">
@@ -508,7 +531,7 @@ function wppa_upload_multiple() {
 						$count++;
 					}
 					else {
-						wppa_error_message(__('Error inserting photo', 'wppa') . ' ' . basename($file['tmp_name']) . '.');
+						wppa_error_message(__('Error inserting photo', 'wppa') . ' ' . basename($file['name'][$i]) . '.');
 						return;
 					}
 				}
@@ -538,7 +561,7 @@ function wppa_upload_photos() {
 				$count++;
 			}
 			else {
-				wppa_error_message(__('Error inserting photo', 'wppa') . ' ' . basename($file['tmp_name']) . '.');
+				wppa_error_message(__('Error inserting photo', 'wppa') . ' ' . basename($file['name']) . '.');
 				return;
 			}
 		}
@@ -768,9 +791,13 @@ global $warning_given;
 function wppa_insert_photo ($file = '', $album = '', $name = '', $desc = '', $porder = '0', $id = '0', $linkurl = '', $linktitle = '') {
 	global $wpdb;
 	global $warning_given_small;
-	global $warning_given_big;
 	global $wppa_opt;
 	
+	if ( ! wppa_allow_uploads($album) ) {
+			wppa_err_alert(__('Max uploads reached for album', 'wppa').' '.wppa_get_album_name($album));
+			return false;
+	}
+
 	if ($file != '' && $album != '' ) {
 		// Get the name if not given
 		if ($name == '') $name = basename($file);
@@ -778,14 +805,9 @@ function wppa_insert_photo ($file = '', $album = '', $name = '', $desc = '', $po
 		$img_size = getimagesize($file);
 		
 		if ($img_size) { 
-			if (!$warning_given_big && ($img_size['0'] > 1280 || $img_size['1'] > 1280)) {
-				if ( $wppa_opt['wppa_resize_on_upload'] == 'yes' ) {
-					wppa_ok_message(__('Although the photos are resized during the upload/import process, you may encounter \'Out of memory\'errors.', 'wppa') . '<br/>' . __('In that case: make sure you set the memory limit to 64M and make sure your hosting provider allows you the use of 64 Mb.', 'wppa'));
-				}
-				else {
-					wppa_warning_message(__('WARNING: You are uploading very large photos, this may result in server problems and excessive download times for your website visitors.', 'wppa') . '<br/>' . __('Check the \'Resize on upload\' checkbox, and/or resize the photos before uploading. The recommended size is: not larger than 1024 x 768 pixels (up to approx. 250 kB).', 'wppa'));
-				}
-				$warning_given_big = true;
+			if ( wppa_check_memory_limit('', $img_size['0'], $img_size['1'] ) === false ) { 
+				wppa_error_message(sprintf(__('ERROR: Attempt to upload a photo that is too large to process (%s).', 'wppa'), $name).wppa_check_memory_limit());
+				return false;
 			}
 			if (!$warning_given_small && ($img_size['0'] < wppa_get_minisize() && $img_size['1'] < wppa_get_minisize())) {
 				wppa_warning_message(__('WARNING: You are uploading photos that are too small. Photos must be larger than the thumbnail size and larger than the coverphotosize.', 'wppa'));
@@ -793,7 +815,7 @@ function wppa_insert_photo ($file = '', $album = '', $name = '', $desc = '', $po
 			}
 		}
 		else {
-			wppa_error_message(__('ERROR: Unable to retrieve immage size of', 'wppa').' '.$name.' '.__('Are you sure it is a photo?', 'wppa'));
+			wppa_error_message(__('ERROR: Unable to retrieve image size of', 'wppa').' '.$name.' '.__('Are you sure it is a photo?', 'wppa'));
 			return false;
 		}
 		// Get ext based on mimetype, regardless of ext

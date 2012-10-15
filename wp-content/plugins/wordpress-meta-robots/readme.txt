@@ -1,10 +1,10 @@
 === WordPress Meta Robots ===
 Contributors: destio
-Donate link: http://www.destio.de/tools/wp-meta-robots/
+Donate link: http://www.destio.de/tools/wordpress-meta-robots/
 Tags: crawler, meta elements, meta robots, meta tags, search engine, search index, seo, spiders
 Requires at least: 3.0+
-Tested up to: 3.2.1
-Stable tag: 1.9
+Tested up to: 3.4.1
+Stable tag: 2.0
 
 With this plugin you can control the indexing behaviour of search engines for any post or page.
 
@@ -22,7 +22,10 @@ From a dropdown menu you can choose the following options:
 
 By creating an new post/page the default value is automatically set to `index, follow` without any user input. Categories, tags, and archiv are set to `noindex, follow`. Search results, 404 and others to `noindex, nofollow`.
 
-**Related Links**
+* NOINDEX - prevents the page from being included in the index
+* NOFOLLOW - prevents Googlebot from following any links on the page
+
+= Related Links =
 
 * [Homepage](http://www.destio.de/tools/wp-meta-robots/ "Homepage of WordPress Meta Robots")
 * [Changelog](http://wordpress.org/extend/plugins/wordpress-meta-robots/changelog/ "Changelog for WordPress Meta Robots")
@@ -65,6 +68,9 @@ Check if 'Meta Robots'are visible under 'Screen Options'.
 1. screenshot-1.gif
 
 == Changelog ==
+
+= 2.0 =
+* Version 2.0: fixing SQL ADD COLUMN bug
 
 = 1.9 =
 * Version 1.9: Small optimization in code and readme.txt

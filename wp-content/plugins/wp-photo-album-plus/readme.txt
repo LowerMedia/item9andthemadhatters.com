@@ -1,17 +1,15 @@
 === WP Photo Album Plus ===
 Contributors: opajaap
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=OpaJaap@OpaJaap.nl&item_name=WP-Photo-Album-Plus&item_number=Support-Open-Source&currency_code=USD&lc=US
-Tags: photo, album, photoalbum, gallery, slideshow, sidebar widget, photowidget, photoblog, widget, qtranslate, multisite, network, lightbox, comment, watermark, iptc, exif
-Version: 4.6.2
+Tags: photo, album, photoalbum, gallery, slideshow, sidebar widget, photowidget, photoblog, widget, qtranslate, cubepoints, multisite, network, lightbox, comment, watermark, iptc, exif, responsive, mobile
+Version: 4.7.18
 Stable tag: trunk
 Author: J.N. Breetvelt
 Author URI: http://www.opajaap.nl/
 Requires at least: 3.0
-Tested up to: 3.4
+Tested up to: 3.4.2
 
-This plugin is designed to easily manage and display your photo albums and slideshows in a single as well as in a network WordPress site. 
-Additionally there are five widgets: Photo of the day, a Search Photos widget, a Top Ten Rated photo widget, a Recent comments widget and a Mini slideshow widget.
-Visitors can leave comments on individual photos. Uploads can be provided with a watermark. IPTC and EXIF data can be displayed and used in descriptions.
+This plugin is designed to easily manage and display your photo albums and slideshows in a single as well as in a network WordPress site.
 
 == Description ==
 
@@ -26,21 +24,24 @@ This plugin is designed to easily manage and display your photo albums and slide
 * The visitor of your site can run a slideshow from the photos in an album by a single mouseclick.
 * The visitor can see an overview of thumbnail images of the photos in album.
 * The visitor can browse through the photos in each album you decide to publish.
+* Individual thumbnails and slides can be linked to off site urls.
 * You can add a Photo of the day Sidebar Widget that displays a photo which can be changed every hour, day or week.
 * You can add a Search Sidebar Widget which enables the visitors to search albums and photos for certain words in names and descriptions.
 * You can enable a rating system and a supporting Top Ten Photos Sidebar Widget that can hold a configurable number of high rated photos.
 * You can enable a comment system that allows visitors to enter comments on individual photos.
 * You can add a recent comments on photos Widget.
 * Apart from the full-size slideshows you can add a Sidebar Widget that displays a mini slideshow.
+* There is a widget to display a number of most recently uploaded photos. It can be configured systemwide and/or on an album basis.
 * There is a General Purpose widget that is a text widget wherein you can use wppa+ script commands.
 * Almost all appearance settings can be done in the settings admin page. No php, html or css knowledge is required to customize the appearence of the photo display.
 * International language support for static text: Currently included foreign languages files: Dutch, Japanese, French(outdated), Spanish, German.
-* Inrernational language support for dynamic text: Album and photo names and descriptions fully support the qTranslate multilanguage rules.
+* International language support for dynamic text: Album and photo names and descriptions fully support the qTranslate multilanguage rules.
 * Suports lightbox 3.
 * You can add watermarks to the photos.
 * The plugin supports IPTC and EXIF data.
 * Supports addThis: while browsing fullsize images the share url will be updated.
-* Supports WP supercache. The cache will be cleared whenever required for wppa+
+* Supports WP supercache. The cache will be cleared whenever required for wppa+.
+* Supports Cube Points. You can assign points to comments and votes.
 
 Plugin Admin Features:
 
@@ -63,9 +64,10 @@ You can find the plugin admin section under Menu Photo Albums on the admin scree
 * The theme should not prevent this plugin from loading the jQuery library in its default wp manner, i.e. the library jQuery in safe mode (uses jQuery() and not $()). 
 Most themes comply with these requirements. 
 However, check these requirements in case of problems with new installations with themes you never had used before with wppa+ or when you modifies your theme.
+* The server should have at least 32MB of memory, 64MB or more is recommended.
 
 = Upgrade notice =
-This version is: Major rev# 4, Minor rev# 6, Fix rev# 0, Hotfix rev# 000.
+This version is: Major rev# 4, Minor rev# 7, Fix rev# 17, Hotfix rev# 000.
 If you are upgrading from a previous Major or Minor version, note that:
 * If you modified wppa_theme.php and/or wppa_style.css, you will have to use the newly supplied versions. The previous versions are NOT compatible.
 * If you set the userlevel to anything else than 'administrator' you may have to set it again. Note that changing the userlevel can be done by the administrator only!
@@ -73,9 +75,9 @@ If you are upgrading from a previous Major or Minor version, note that:
 
 = Standard installation when not from the wp plugins page =
 * Unzip and upload the wppa plugin folder to wp-content/plugins/
-* Make sure that the folder wp-content/uploads/ exists and is writable by the server (CHMOD 755)
+* Make sure that the folder wp-content/uploads/ exists and is writable by the server (CHMOD 755, some systems need CHMOD 777)
 * Activate the plugin in WP Admin -> Plugins.
-* If, after installation, you are unable to upload photos, check the existance and rights (CHMOD 755) of: 
+* If, after installation, you are unable to upload photos, check the existance and rights (CHMOD 755, some systems need CHMOD 777) of: 
 for the single site mode installation: the folders .../wp-content/uploads/wppa/ and .../wp-content/uploads/wppa/thumbs/, 
 and for the multisite mode installation (example for blog id 92): the folders path: .../wp-content/blogs.dir/92/wppa/ and .../wp-content/blogs.dir/92/wppa/thumbs/.
 In rare cases you will need to create them manually. You can see the actual pathnames and urls in the lowest table of the Photo Albums -> Settings page.
@@ -87,13 +89,22 @@ See Table I-A1 and Table I-B1,2 of the Photo Albums -> Settings admin page.
 
 = Which other plugins do you recommand to use with WPPA+, and which not? =
 
-* Recommanded plugins: qTranslate, Lightbox 3, WP Super Cache, AddThis.
+* Recommanded plugins: qTranslate, WP Super Cache, AddThis, Cube Points.
 * Plugins that break up WPPA+: My Live Signature.
+
+= Are there special requirements for responsive (mobile) themes? =
+
+* Yes! Go to the Photo Albums -> Settings admin page. Enter *auto* in Table I-A1. Lowercase letters, no quotes.
+* Do not use %%size=[any number]%%, unless you want a fixed width display. This setting is inherited to the next %%wppa%%, 
+so use %%size=auto%% in the next %%wppa%% occurrence to go back to automatic.
+* If you use the Slideshow widget, set the width also to *auto*, and the vertical alignment to *fit*.
+* You may also need to change the thumbnail sizes for widgets in *Table I-F 2,4,6 and 8*. Set to 75 if you want 3 columns in the theme *Responsive*.
 
 = After update, many things seem to go wrong =
 
 * After an update, always clear your browser cache (CTRL+F5) and clear your temp internetfiles, this will ensure the new versions of js files will be loaded.
-* And - most important - if you use a server side caching program clear its cache. (No longer needed as of version 4.4.2)
+* And - most important - if you use a server side caching program (like WP Total Cavhe) clear its cache. 
+* Make sure any minifying plugin (like W3 Total Cache) is also reset to make sure the new version files are used.
 * Visit the Photo Albums -> Settings page -> Table VII-A1 and press Do it!
 * When upload fails after an upgrade, one or more columns may be added to one of the db tables. In rare cases this may have been failed. 
 Unfortunately this is hard to determine. 
@@ -134,8 +145,8 @@ Modern cameras produce photos of 7 megapixels or even more. To downsize the phot
 even a thumbnail image, the server has to create internally a fullsize fullcolor image of the photo you are uploading/importing.
 This will require one byte of memory for each color (Red, Green, Blue) and for every pixel. 
 So, apart form the memory required for the server's program and the resized image, you will need 21 MB (or even more) of memory just for the intermediate image.
-As most hosting providers do not allow you more than 32 MB, you will get 'Out of memory' errormessages when you try to upload large pictures.
-You can configure WP to use 64 MB (That would be enough in most cases) by specifying *define('WP_MEMORY_LIMIT', '64M');* in wp-config.php, 
+As most hosting providers do not allow you more than 64 MB, you will get 'Out of memory' errormessages when you try to upload large pictures.
+You can configure WP to use 128 MB (That would be enough in most cases) by specifying *define('WP_MEMORY_LIMIT', '128M');* in wp-config.php, 
 but, as explained earlier, this does not help when your hosting provider does not allows the use of that much memory.
 If you have control over the server yourself: configure it to allow the use of enough memory.
 Oh, just Google on 'picture resizer' and you will find a bunch of free programs that will easily perform the resizing task for you.
@@ -144,6 +155,393 @@ Oh, just Google on 'picture resizer' and you will find a bunch of free programs 
 == Changelog ==
 
 See for additional information: http://wppa.opajaap.nl/?page_id=1459
+
+= 4.7.18 =
+
+= Bug Fixes =
+
+* Album names containing double quotes caused layout problems in IE8. Fixed.
+* Clearing the ratings of the photos in an empty album no longer causes an error message.
+
+= Other Changes =
+
+* The display of the album list in the main screen of the Album Admin page now shows only top-level albums. 
+Clicking the arrow expands the subalbum tree one level etc.
+* You can now check boxes on the upload screen to go to the album admin after upload directly. The most recent state is remembered.
+
+= 4.7.17 =
+
+= Bug Fixes =
+
+* Fixed return urls after commenting from topten or lasten widgets.
+* Fixed layout issues of comments.
+
+= 4.7.16 =
+
+= Bug Fixes =
+
+* Due to a recent code change the share urls and history pushstate urls contained & amp; in stead of simple &. Fixed.
+
+= Other Changes =
+
+* The tooltip "Zoom in" can be switched off in Table II-F.
+* Cosmetic changes to the slideshow comment area.
+
+= 4.7.15 =
+
+= Bug Fixes =
+
+* Admin did not always get a moderate link on a comment notification email. Fixed.
+
+= Other changes =
+
+* Table II-F has been expanded with settings for single and single media type photos.
+* Cosmetic changes to the comment admin page while moderating comment from email notification.
+* cosmetic changes to the comment notification email.
+
+= 4.7.14 =
+
+= Bug Fixes =
+
+* When using qTranslate and being switched to a non-default language, the content is now always in the right language independant of the ajax switch.
+* Fixed bugs in AddThis interface.
+* The popup of a portrait image is horizontally centered during animation now.
+
+= New Features =
+
+* The name and description can be set to display in two separate boxes in the slideshow. Table IX-E13.
+* If the name and description are displayed in separate boxes, the display of an empty description box can be suppressed in Table II-B6.1.
+* Type of sharelink for AddThis is now configurable in Table IX-F3.
+* You can select which user(s) will receive a notification by email on entring a new comment. Table IV-F5. 
+If the user has the right to admin comments, a moderatelink is included in the mail.
+
+= Other Changes =
+
+* Further reduction on database queries to an average of approx 20% compared with version 4.7.12
+
+= 4.7.13 =
+
+= Other changes =
+
+* Check on sufficient memory on upload can be switched off (Table VII-B3.1 -B3.2) for systems where the computation fails and uploads are no longer possible.
+If during the calculation it becomes obvious that the result is unreliable, this check takes no action.
+* Significant performance improvements when there are no exif and iptc tags in photo descriptions.
+* Significant performance improvements due to the reduction of database queries to approx 35% in comparision with the previous version.
+* Exif values like: 'On, Red-eye reduction' are now translatable.
+* Added debug info on queries.
+* Added statistics under the album table in the Photo albums -> Album admin page
+
+= 4.7.12 =
+
+= Bug Fixes =
+
+* When ajax is on and the frontend language is different from the admin language, some words in the slideshow like Faster and Slower became untranslated. Fixed.
+* Fix for memory check on upload where memory_limit set to -1 (unlimited), revised calculation.
+* Fix for link error in coverimage when ajax resulting in scrolling up the page.
+
+= 4.7.11 =
+
+= Bug Fixes =
+
+* All users that can edit posts or edit pages will have the wppa+ album shortcode button above the visual editor.
+
+= New Features =
+
+* Network administrators can decide to run wppa+ in single site mode. Add to wp-config.php: define ('WPPA_MULTISITE_GLOBAL', true); Do not apply in existing installations!
+
+= Other Changes =
+
+* Improved check on sufficient memory during upload. Also added messages on what the max uploadeable photo pixelsize is. You should no longer get crashes due to out of memory errors.
+* Added Turkish translation frontend.
+
+= 4.7.10 =
+
+= Bug Fixes =
+
+* Fixed errors in comment admin when no linkpage was selected.
+* The frontend upload dialog will now have the correct initial width in responsive themes and where size is auto.
+
+= New Features =
+
+* You can apply a watermark to an existing photo on the Album admin -> Manage photos admin screen. 
+To enable the user to select a watermark on the manage photos screen, check Table IX-D1: Watermark 
+AND - if the user has no right to change settings (See Table VII-A) - Table IX-D2: User watermark.
+* You can preview the fullsize image in a new browsertab by clicking the thumbnail on the Album admin -> Manage photos admin screen. 
+After applying a watermark, press CTRL+F5 to see the changes you made.
+
+= Other Changes =
+
+* The rule above that a watermark is selectable not only if Table IX-D2 is checked but also if the user has 
+the right to change settings (e.g. the default watermark) applies to all corresponding locations (front-end and upload/import screen).
+* When using the wp editor (Table IX-A11) the update buttons in the album admin page show a spinner while processing the update request.
+
+= 4.7.9 =
+
+= New Features =
+
+* Download button added to the fullsize popup with print button. Save image or zip under its original name (Art Monkey type of link).
+* New wppa display type added: slphoto. Displays a single photo in the style of a slideshow, without navigation boxes, 
+but with rating and comment as configured for slideshows.
+* If you specify both album and photo in a shortcode for a slideshow, the slideshow will start at the specified photo. 
+Works in new shortcode only as scripts do not allow the specification of both album and photo.
+* The display of the x/y counter in lightbox displays is now settable in Table II-F9
+* Added an option to run wpautop on fullsize descriptions Table IV-B11.
+
+= 4.7.8 =
+
+= Bug Fixes =
+
+* Fixed js error that stopped slideshow under some circumstances
+
+= 4.7.7 =
+
+= Bug Fixes =
+
+* Filmstrip pagesize fixed when size is fraction.
+* Swipe on slideshow (left-right) is supposed to work on all mobile devices now.
+
+= New Features =
+
+* You can now link the fullsize name to an imagefile or a zipfile containing the photo with the name as filename. Table VI-12: Art Monkey Link.
+* Swipe on lightbox (left-right) is supposed to work on all mobile devices now.
+
+= 4.7.6 =
+
+= Bug Fixes =
+
+* New tab on link from slide to plain file now works.
+* Link form slide to lightbox now displays the selected magnifier cursor.
+* New style and old style shortcodes can now also be mixed in a single page/post when they contain slideshows and Table IX-A7 is checked (Allow foreign shortcodes).
+
+= New Features =
+
+* Font characteristics for wppa lightbox overlay text are now settable in Table V-9.
+
+= Other Changes =
+
+* Pages containing the new style shortcode are now also selectable as target page in Table VI
+* The state of the 'Create new style shortcoe' selectionbox is now remembered in a cookie.
+
+= 4.7.5 =
+
+= Bug Fixes =
+
+* Sidebar slideshow now displays (or not) name and description as asked for in the widget activation screen.
+
+= Other Changes =
+
+* Added padding 0 to slidshow elements in wppa-style.css
+* Added order by timestamp for album order method (Table IV-D1)
+* The previous wppa+ version is now recorded for support purposes
+
+= 4.7.4 =
+
+= Bug Fixes =
+
+* Thumbnail popup failed under some circumstances in chrome and safari. Fixed.
+* Removed erroneous #'s from links when ajax is enabled, causing ajax and some links not to work properly.
+* The update of the url (and hence the history.pusState) no longer happens on a single slidechange when there is no album in the url.
+* Fixed a fimwindow alignment problem that only showed up in sites that could not provide a link to show it.
+* Fixed a problem where links at the top of the page did no longer work after closure of a lightbox display.
+
+= New Features =
+
+* The space between avg and my rating is now settable in Table II-E4
+* The shortcode generator now optionally creates new style shortcodes. 
+The use of new style shortcodes is experimental, it is encouraged to be used by experienced users, but not yet granted to work always.
+* You can now decide to use the wp editor in places of multiline inputs in Table IX-A11.
+* You can select one out of three sizes magnifier cursor for lightbox in Table I-G2.
+* You can specify a fraction for the %%width=..%% script token. It implies auto.
+
+= Other Changes =
+
+* Plugin load time and initialisation time measurements added in diagnostic mode.
+
+= 4.7.3 =
+
+= Bug Fixes =
+
+* Resizing the browser window when lightbox is open does the image resize when it is part of a set, but not when it is a single image. Fixed.
+
+= New Features =
+
+* You can now specify what you want in the subtitle of a lightbox display in Table II-F3..8
+
+= 4.7.2 =
+
+= Bug Fixes =
+
+* Photo of the day: when linked to lightbox, the name of the photo was Zoom in. Fixed.
+
+= 4.7.1 =
+
+= New Features =
+
+* Now supports the plugin Cube Points. You can assign points to Comments and Rating votes in Table IX-F.
+
+= 4.7.0 =
+
+= Bug Fixes =
+
+* The Settings page now passes W3C validation.
+* The embedded lightbox now also initializes when it is active on any linksources but not on slideshows.
+* The thumbnail popups popped down to zero dimensions in Chrome. Fixed.
+* The links to lightbox in the slideshow did not function for even numbered slides when animation type was a fading type. Fixed.
+* In lightbox: If the picture is very landscape, so the width is the limiting factor, it will be properly downsized now.
+* It is no longer required to have Table II-D2 checked in order to make Table VI-11 set to slideshow window to work.
+
+= New Features =
+
+* The search widget has an optional textfield before the edit box at widget activation. It may contain HTML.
+* Single photos and Media type photos can link to lightbox.
+* The photos album name is displayed on the comment admin and the comment edit screens.
+* If the (admin) user has the rights to admin comments, he will be able to change the comment status on the Album Admin-> Manage Photos screen.
+The status 'trash' has the meaning: delete when the screen is refreshed/reopened or when the comment admin page is opened.
+
+= Other Changes = 
+
+* Cosmetic changes to the Settings screen. All tables and subtables can be toggled on/of by clicking the header bar.
+* The concept of single photos has been re-implemented. Links are settable in Table VI-0.
+This implementation skips all superfluous overhead and it is possible now to have multiple photos in a row without vertical alignment problems;
+just use %%align=left%% and put all script tokens together without newlines.
+* The Big Browse Buttons are now each 1/3 of the slideframe wide, allowing the middle part to link to lightbox or a Photo Specific link.
+* Links to lightbox show a magnifier cursor and tooltip: Zoom in. (Only in browsers that support url cursors).
+* Table II-D has been slightly changed. Item 1 (Covertext) applies to the album description only now. 
+Item 4 has been added to switch the View link on/off separately. 
+Please review the settings in Table II-D if the display has changed after the update to this version.
+
+= Known Restrictions =
+
+* Resizing the browser window when lightbox is open does the image resize when it is part of a set, but not when it is a single image.
+If anybody can supply me a fix for this, i would be very glad.
+
+= 4.6.12 =
+
+= Other Changes =
+
+* The Tinymce shortcode generator now supports all possible script combinations, including the most simple 'generic album'
+and the extended features on #topten and #lasten.
+
+= 4.6.11 =
+
+= Bug Fixes =
+
+* The Tinymce shortcode generator did not show album previews when the photo order was descending. Fixed.
+* Fixed redundant slashes in thumbnail popup description causing html attributes not to act as intented.
+
+= New Features =
+
+* The E-mail adresses in the comment admin page are now links to the mail program to enable quick replies.
+
+= Other Changes =
+
+* Almost all static texts in the Tinymce shortcode generator are now translatable.
+* The Tinymce shortcode generator now also displays previews of --- special --- albums like #topten etc.
+* Minor cosmetic changes to the shortcode dialog.
+* If the plugin Ultimate TinyMCE is installed (and is up to rev 2.7.1) the WPPA+ Shortcode button can be positiond in that plugins Settings Page.
+
+= 4.6.10 =
+
+= Bug fixes =
+
+* IPTC and EXIF tags were not converted in thumbnail popup descriptions. Fixed.
+* Fixed a number of layout problems for ver 4 browsers (IE7,8) when Table I-A1 is set to auto.
+* Size and position of the images in the wppa lightbox overlay are now correct for IE7,8.
+
+= New Features =
+
+* The visual editor has an extra button: WPPA+ Gallery Shortcode. This makes the creation of the wppa+ script tags easy.
+* The display of time since upload can now be switched on/off at activation of the LasTen widget.
+* You can select a combination of albums in the LasTen widget.
+
+= Known Restrictions =
+
+* Animation type 'turnover' for slideshows does not work in IE7,8; the slideshow will not run and single images are not displayed properly.
+
+= 4.6.9 =
+
+= Bug Fixes =
+
+* Fixed sidebar slideshow layout when portrait only for version 4 browsers (IE7,8).
+* Fixed lightbox layout for ver. 4 browsers.
+* Fixed a qTranslate problem i.c.w. Table II-C5.1 being checked.
+
+= 4.6.8 =
+
+= Bug Fixes =
+
+* Improved lightbox display in IE < 9, its not great yet
+* Fixed unknown v align and h aligh errors
+
+= 4.6.7 =
+
+= Bug Fixes =
+
+* There were a few slideshow display and alignment problems. Fixed.
+* The settings in Table I-B1 and 2 (Fullsize width and height) now also limit the maximum display size when Table I-A1 is set to 'auto', i.e. in responsive (mobile) themes.
+
+= 4.6.6 =
+
+= Bug Fixes =
+
+* Fixed a slideshow layout issue where column width not auto and fullsize smaller than column width.
+
+= New Features =
+
+* The Edit Album display now shows the comments at each photo.
+
+= 4.6.5 =
+
+= Bug Fixes =
+
+* Changed 'javascript://' to 'javascript:void();' for validation reasons.
+
+= New Features =
+
+* There is a new widget: LasTen. It displays the n most recently uploaded photos. Its settings are like those for the topten widget.
+* There is a new script keyword: %%album=#lasten%% optional album id and count like: %%album=#lasten,4,7%%.
+
+= Other Changes =
+
+* WPPA+ is now compatible with responsive themes (mobile themes). Tested with Responsive, Fluid blogging and SimpleX.
+To use wppa+ on a responsive theme: Set Table I-A1 to *auto*, Set the width in the slideshow widget to *auto* and 
+do not use any %%size=...%% script tokens unless you incidently want a fixed width display.
+* You can select *month* as the period in the photo of the day admin.
+
+= 4.6.4 =
+
+= Bug Fixes =
+
+* Fixed filmstrip length problem in auto column width.
+* Fixed slideframe width problem in auto column width.
+
+= New Features =
+
+* To reduce the overhead of SEO code you can now switch the two metatag mechanisms off independantly. (Table IX-A9 and 10).
+
+= Other Changes = 
+
+* You can now only select pages that contain %%wppa%% as the page to display search results on. (Table IX-C1).
+* You can now only select pages that contain %%wppa%% as the page to link to in Table VI.
+
+= 4.6.3 =
+
+= Bug Fixes =
+
+* The animation in the embedded lightbox for images that were smaller than the maximum possible ended with a shift to the left. Fixed.
+* Fixed a layout issue for the left/right arrows in the embedded lightbox for some installations.
+* Fixed a pagination problem that caused the first page to be empty and redundant when %%album=#topten...%% was used.
+* The subtitles in %%mphoto=..%% are displayed properly now even when they contain html and html is allowed.
+
+= New Features =
+
+* There is a maximum upload system in place. See Table IX-B5 and the Edit Album admin page. 
+Limits can be set on an album basis (with a default on creation time set in Table IX-B5) and are only changeable by administrators.
+* You can set whether slideonly starts running or not in Table IV-B3.1.
+
+= Other Changes =
+
+* All the 7 widgets can now have an empty title and will hide the widget title box when the title is blank.
 
 = 4.6.2 =
 

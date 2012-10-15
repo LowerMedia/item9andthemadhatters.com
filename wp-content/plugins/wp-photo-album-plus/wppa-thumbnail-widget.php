@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * display thumbnail photos
-* Version 4.5.0
+* Version 4.7.16
 */
 
 class ThumbnailWidget extends WP_Widget {
@@ -23,13 +23,13 @@ class ThumbnailWidget extends WP_Widget {
 
         extract( $args );
 		
- 		$widget_title = apply_filters('widget_title', empty( $instance['title'] ) ? __a('Thumbnail Photos', 'wppa_theme') : $instance['title']);
-
 		$instance = wp_parse_args( (array) $instance, array( 
 													'title' => '',
 													'album' => 'no',
 													'name' => 'no'
 													) );
+ 
+		$widget_title = apply_filters('widget_title', $instance['title']);
 
 		$page = $wppa_opt['wppa_thumbnail_widget_linkpage'];
 		$max  = $wppa_opt['wppa_thumbnail_widget_count'];
@@ -50,6 +50,8 @@ class ThumbnailWidget extends WP_Widget {
 		
 		if ($thumbs) foreach ($thumbs as $image) {
 			
+			global $thumb;
+			$thumb = $image;
 			// Make the HTML for current picture
 			$widget_content .= "\n".'<div class="wppa-widget" style="width:'.$maxw.'px; height:'.$maxh.'px; margin:4px; display:inline; text-align:center; float:left;">'; 
 			if ($image) {
@@ -59,6 +61,7 @@ class ThumbnailWidget extends WP_Widget {
 				$imgstyle   = $imgstyle_a['style'];
 				$width      = $imgstyle_a['width'];
 				$height     = $imgstyle_a['height'];
+				$cursor		= $imgstyle_a['cursor'];
 				$usethumb	= wppa_use_thumb_file($image['id'], $width, $height) ? '/thumbs' : '';
 				$imgurl 	= WPPA_UPLOAD_URL . $usethumb . '/' . $image['id'] . '.' . $image['ext'];
 
@@ -70,16 +73,17 @@ class ThumbnailWidget extends WP_Widget {
 				if ($link) {
 					if ( $link['is_url'] ) {	// Is a href
 						$widget_content .= "\n\t".'<a href="'.$link['url'].'" title="'.$title.'" target="'.$link['target'].'" >';
-							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
+							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.' cursor:pointer;" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 						$widget_content .= "\n\t".'</a>';
 					}
 					elseif ( $link['is_lightbox'] ) {
+						$title = wppa_get_lbtitle('thumb', $image);
 						$widget_content .= "\n\t".'<a href="'.$link['url'].'" rel="'.$wppa_opt['wppa_lightbox_name'].'[thumbnail-'.$album.']" title="'.$title.'" target="'.$link['target'].'" >';
-							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
+							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.wppa_zoom_in().'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.$cursor.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 						$widget_content .= "\n\t".'</a>';
 					}
 					else { // Is an onclick unit
-						$widget_content .= "\n\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' onclick="'.$link['url'].'" alt="'.esc_attr(wppa_qtrans($image['name'])).'">';					
+						$widget_content .= "\n\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.' cursor:pointer;" '.$imgevents.' onclick="'.$link['url'].'" alt="'.esc_attr(wppa_qtrans($image['name'])).'">';					
 					}
 				}
 				else {
@@ -97,7 +101,9 @@ class ThumbnailWidget extends WP_Widget {
 		
 		$widget_content .= "\n".'<!-- WPPA+ thumbnail Widget end -->';
 
-		echo "\n".$before_widget.$before_title.$widget_title.$after_title.$widget_content.$after_widget;
+		echo "\n" . $before_widget;
+		if ( !empty( $widget_title ) ) { echo $before_title . $widget_title . $after_title; }
+		echo $widget_content . $after_widget;
     }
 	
     /** @see WP_Widget::update */
@@ -115,14 +121,12 @@ class ThumbnailWidget extends WP_Widget {
 		global $wppa_opt;
 		//Defaults
 		$instance = wp_parse_args( (array) $instance, array( 
-															'sortby' => 'post_title', 
-															'title' => '', 
+															'title' => __('Thumbnail Photos', 'wppa'),
 															'album' => '0',
 															'name' => 'no') );
- 		$widget_title = apply_filters('widget_title', empty( $instance['title'] ) ? $wppa_opt['wppa_thumbnailwidgettitle'] : $instance['title']);
-
-		$album = $instance['album'];
+ 		$album = $instance['album'];
 		$name = $instance['name'];
+		$widget_title = $instance['title'];
 ?>
 		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'wppa'); ?></label> <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $widget_title; ?>" /></p>
 		<p><label for="<?php echo $this->get_field_id('album'); ?>"><?php _e('Album:', 'wppa'); ?></label> 

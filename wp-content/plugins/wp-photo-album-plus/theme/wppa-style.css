@@ -8,7 +8,7 @@
 /*
 /* You may always look into a newer version of this file to see what new classes and id's come with an upgrade
 /*
-/* This is version 4.6.0
+/* This is version 4.7.5
 */
 
 /* Navigation */
@@ -116,6 +116,7 @@
 /* The popup small image, here is still a problem with IE6 */
 .wppa-popup-frame {
 	position: absolute;
+	z-index:1000;
 }
 
 .wppa-popup {
@@ -147,6 +148,7 @@
 .slide-frame {
 	position: relative;
 	width: 100%;
+	padding: 0 !important;
 }
 
 .wideentry .slide-frame {
@@ -156,6 +158,7 @@
 .theslide {
 	position: absolute;
 	background-color: transparent;
+	padding: 0 !important;
 }
 
 .theimg {
@@ -207,6 +210,7 @@ margin: 0 auto;
 	text-align:left; 
 	padding:0px;	
 	border: 0px none; 
+	width: 100%;
 }
 #content .wppa-comment-form input, #content .wppa-comment-form textarea, .wppa-comment-form input, .wppa-comment-form textarea  {
 	padding:0; 
@@ -280,3 +284,28 @@ margin: 0 auto;
 #wppa-overlay-txt table {
 text-align:left;
 }
+
+.wppa-mphoto {
+}
+.wppa-sphoto {
+}
+/* phpinfo */
+#phpinfo {background-color: #ffffff; color: #000000;}
+#phpinfo, #phpinfo td, #phpinfo th, #phpinfo h1, #phpinfo h2 {font-family: sans-serif;}
+#phpinfo pre {margin: 0px; font-family: monospace;}
+#phpinfo a:link {color: #000099; text-decoration: none; background-color: #ffffff;}
+#phpinfo a:hover {text-decoration: underline;}
+#phpinfo table {border-collapse: collapse;}
+#phpinfo .center {text-align: center;}
+#phpinfo .center table { margin-left: auto; margin-right: auto; text-align: left; width:600px;}
+#phpinfo .center th { text-align: center !important; }
+#phpinfo td, #phpinfo th { border: 1px solid #000000; font-size: 75%; vertical-align: baseline;}
+#phpinfo h1 {font-size: 150%;}
+#phpinfo h2 {font-size: 125%;}
+#phpinfo .p {text-align: left;}
+#phpinfo .e {background-color: #ccccff; font-weight: bold; color: #000000;}
+#phpinfo .h {background-color: #9999cc; font-weight: bold; color: #000000;}
+#phpinfo .v {background-color: #cccccc; color: #000000;}
+#phpinfo .vr {background-color: #cccccc; text-align: right; color: #000000;}
+#phpinfo img {float: right; border: 0px;}
+#phpinfo hr {width: 600px; background-color: #cccccc; border: 0px; height: 1px; color: #000000;}

@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * display the widget
-* Version 4.5.0
+* Version 4.7.16
 */
 
 class PhotoOfTheDay extends WP_Widget {
@@ -21,7 +21,8 @@ class PhotoOfTheDay extends WP_Widget {
 
         extract( $args );
 
-		$widget_title = $instance['title'];
+//		$widget_title = $instance['title'];
+		$widget_title = apply_filters('widget_title', $instance['title']);
 
 		// get the photo  ($image)
 		$image = wppa_get_potd();
@@ -43,10 +44,26 @@ class PhotoOfTheDay extends WP_Widget {
 			$name = wppa_qtrans($image['name']);
 			$link = wppa_get_imglnk_a('potdwidget', $image['id']);
 			$lightbox = $link['is_lightbox'] ? 'rel="'.$wppa_opt['wppa_lightbox_name'].'"' : '';
+			if ( $link ) {
+				if ( $link['is_lightbox'] ) {
+					$cursor = ' cursor:url('.wppa_get_imgdir().$wppa_opt['wppa_magnifier'].'),pointer;';
+					$title  = wppa_zoom_in();
+					$ltitle = wppa_get_lbtitle('potd', $image);
+				}
+				else {
+					$cursor = ' cursor:pointer;';
+					$title  = $link['title'];
+					$ltitle = $title;
+				}
+			}
+			else {
+				$cursor = ' cursor:default;';
+				$title = esc_attr(stripslashes(__($image['name'])));
+			}
 			
-			if ($link) $widget_content .= "\n\t".'<a href = "'.$link['url'].'" target="'.$link['target'].'" '.$lightbox.' title="'.$link['title'].'">';
+			if ($link) $widget_content .= "\n\t".'<a href = "'.$link['url'].'" target="'.$link['target'].'" '.$lightbox.' title="'.$ltitle.'">';
 			
-				$widget_content .= "\n\t\t".'<img src="'.$imgurl.'" style="width: '.$wppa_opt['wppa_widget_width'].'px;" alt="'.$name.'" />';
+				$widget_content .= "\n\t\t".'<img src="'.$imgurl.'" style="width: '.$wppa_opt['wppa_widget_width'].'px;'.$cursor.'" alt="'.$name.'" title="'.$title.'"/>';
 
 			if ($link) $widget_content .= "\n\t".'</a>';
 		} 
@@ -73,7 +90,9 @@ class PhotoOfTheDay extends WP_Widget {
 
 		$widget_content .= "\n".'<!-- WPPA+ Photo of the day Widget end -->';
 
-		echo "\n" . $before_widget . $before_title . $widget_title . $after_title . $widget_content . $after_widget;
+		echo "\n" . $before_widget;
+		if ( !empty( $widget_title ) ) { echo $before_title . $widget_title . $after_title; }
+		echo $widget_content . $after_widget;
     }
 	
     /** @see WP_Widget::update */

@@ -415,7 +415,7 @@ class dc_jqsocialmediatabs_widget extends WP_Widget {
 	</p>
 	
 	<div class="widget-control-actions alignright">
-		<p><a href="http://www.designchemical.com/blog/index.php/wordpress-plugin-social-media-tabs/"><?php esc_attr_e('Visit plugin site', 'dcjq-social-tabs'); ?></a></p>
+		<p><a href="http://www.designchemical.com/blog/index.php/wordpress-plugins/wordpress-plugin-social-media-tabs/"><?php esc_attr_e('Visit plugin site', 'dcjq-social-tabs'); ?></a></p>
 	</div>
 	
 	<?php 

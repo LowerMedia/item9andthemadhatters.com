@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * display the top rated photos
-* Version 4.5.5
+* Version 4.7.16
 */
 
 class TopTenWidget extends WP_Widget {
@@ -22,10 +22,9 @@ class TopTenWidget extends WP_Widget {
 
         extract( $args );
 		
- 		$widget_title = apply_filters('widget_title', empty( $instance['title'] ) ? __a('Top Ten Photos', 'wppa_theme') : $instance['title']);
-
 		$instance = wp_parse_args( (array) $instance, array( 'sortby' => 'mean_rating', 'title' => '', 'album' => '' ) );
 
+ 		$widget_title = apply_filters('widget_title', $instance['title'] );
 		$page = $wppa_opt['wppa_topten_widget_linkpage'];
 		$max  = $wppa_opt['wppa_topten_count'];
 		
@@ -42,6 +41,8 @@ class TopTenWidget extends WP_Widget {
 		$maxh = $maxw + 18;
 		if ($thumbs) foreach ($thumbs as $image) {
 			
+			global $thumb;
+			$thumb = $image;
 			// Make the HTML for current picture
 			$widget_content .= "\n".'<div class="wppa-widget" style="width:'.$maxw.'px; height:'.$maxh.'px; margin:4px; display:inline; text-align:center; float:left;">'; 
 			if ($image) {
@@ -53,6 +54,7 @@ class TopTenWidget extends WP_Widget {
 				$imgstyle   = $imgstyle_a['style'];
 				$width      = $imgstyle_a['width'];
 				$height     = $imgstyle_a['height'];
+				$cursor		= $imgstyle_a['cursor'];
 				$usethumb	= wppa_use_thumb_file($image['id'], $width, $height) ? '/thumbs' : '';
 				$imgurl 	= WPPA_UPLOAD_URL . $usethumb . '/' . $image['id'] . '.' . $image['ext'];
 
@@ -64,16 +66,17 @@ class TopTenWidget extends WP_Widget {
 				if ($link) {
 					if ( $link['is_url'] ) {	// Is a href
 						$widget_content .= "\n\t".'<a href="'.$link['url'].'" title="'.$title.'" target="'.$link['target'].'" >';
-							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
+							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.' cursor:pointer;" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 						$widget_content .= "\n\t".'</a>';
 					}
 					elseif ( $link['is_lightbox'] ) {
+						$title = wppa_get_lbtitle('thumb', $image);
 						$widget_content .= "\n\t".'<a href="'.$link['url'].'" rel="'.$wppa_opt['wppa_lightbox_name'].'[topten-'.$album.']" title="'.$title.'" target="'.$link['target'].'" >';
-							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
+							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.wppa_zoom_in().'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.$cursor.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 						$widget_content .= "\n\t".'</a>';
 					}
 					else { // Is an onclick unit
-						$widget_content .= "\n\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' onclick="'.$link['url'].'" alt="'.esc_attr(wppa_qtrans($image['name'])).'">';					
+						$widget_content .= "\n\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.' cursor:pointer;" '.$imgevents.' onclick="'.$link['url'].'" alt="'.esc_attr(wppa_qtrans($image['name'])).'">';					
 					}
 				}
 				else {
@@ -91,7 +94,9 @@ class TopTenWidget extends WP_Widget {
 		
 		$widget_content .= "\n".'<!-- WPPA+ TopTen Widget end -->';
 
-		echo "\n".$before_widget.$before_title.$widget_title.$after_title.$widget_content.$after_widget;
+		echo "\n" . $before_widget;
+		if ( !empty( $widget_title ) ) { echo $before_title . $widget_title . $after_title; }
+		echo $widget_content . $after_widget;
     }
 	
     /** @see WP_Widget::update */
@@ -108,8 +113,8 @@ class TopTenWidget extends WP_Widget {
     function form($instance) {	
 		global $wppa_opt;
 		//Defaults
-		$instance = wp_parse_args( (array) $instance, array( 'sortby' => 'mean_rating', 'title' => '', 'album' => '0') );
- 		$widget_title = apply_filters('widget_title', empty( $instance['title'] ) ? $wppa_opt['wppa_toptenwidgettitle'] : $instance['title']);
+		$instance = wp_parse_args( (array) $instance, array( 'sortby' => 'mean_rating', 'title' => __('Top Ten Photos', 'wppa'), 'album' => '0') );
+ 		$widget_title = apply_filters('widget_title', $instance['title']);
 
 		$album = $instance['album'];
 ?>

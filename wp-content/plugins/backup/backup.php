@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Backup
-Version: 2.1.3
+Version: 2.2
 Plugin URI: http://hel.io/wordpress/backup/
 Description: Back up your WordPress website to Google Drive.
 Author: Sorin Iclanzan
@@ -218,7 +218,7 @@ class Backup {
 	function __construct() {
 		global $timestart;
 
-		$this->version = '2.1.3';
+		$this->version = '2.2';
 		$this->time = intval( $timestart );
 		$this->plugin_dir = dirname( plugin_basename( __FILE__ ) );
 		$this->text_domain = 'backup';
@@ -254,23 +254,23 @@ class Backup {
 			$this->options = array(
 				'plugin_version'      => $this->version,
 				'backup_token'        => '',
-				'refresh_token'       => defined( 'BACKUP_REFRESH_TOKEN' ) ? BACKUP_REFRESH_TOKEN : '',
+				'refresh_token'       => '',
 				'backup_title'        => get_bloginfo( 'name' ),
-				'local_folder'        => defined( 'BACKUP_LOCAL_FOLDER' ) ? BACKUP_LOCAL_FOLDER : '',
-				'drive_folder'        => defined( 'BACKUP_DRIVE_FOLDER' ) ? BACKUP_DRIVE_FOLDER : '',
+				'local_folder'        => '',
+				'drive_folder'        => '',
 				'backup_frequency'    => 'never',
 				'source_list'         => array( 'database', 'content', 'uploads', 'plugins' ),
 				'exclude_list'        => array( '.svn', '.git', '.DS_Store' ),
 				'include_list'        => array(),
 				'backup_list'         => array(),
-				'client_id'           => defined( 'BACKUP_CLIENT_ID' ) ? BACKUP_CLIENT_ID : '',
-				'client_secret'       => defined( 'BACKUP_CLIENT_SECRET' ) ? BACKUP_CLIENT_SECRET : '',
+				'client_id'           => '',
+				'client_secret'       => '',
 				'local_number'        => 1,
 				'drive_number'        => 10,
 				'quota_total'         => '',
 				'quota_used'          => '',
 				'chunk_size'          => 1, // MB
-				'time_limit'          => 120, // seconds
+				'time_limit'          => 600, // seconds
 				'backup_attempts'     => 3,
 				'request_timeout'     => 60, // seconds
 				'enabled_transports'  => $this->http_transports,
@@ -286,7 +286,18 @@ class Backup {
 			)
 				add_action( 'init', array( &$this, 'upgrade' ), 1 );
 
+		// Allow some options to be overwritten from the config file.
+		if ( defined( 'BACKUP_REFRESH_TOKEN' ) ) $this->options['refresh_token'] = BACKUP_REFRESH_TOKEN;
+		if ( defined( 'BACKUP_DRIVE_FOLDER' ) )  $this->options['drive_folder']  = BACKUP_DRIVE_FOLDER;
+		if ( defined( 'BACKUP_CLIENT_ID' ) )     $this->options['client_id']     = BACKUP_CLIENT_ID;
+		if ( defined( 'BACKUP_CLIENT_SECRET' ) ) $this->options['client_secret'] = BACKUP_CLIENT_SECRET;
+		if ( defined( 'BACKUP_LOCAL_FOLDER' ) )  $this->options['local_folder']  = BACKUP_LOCAL_FOLDER;
+
 		$this->local_folder = absolute_path( $this->options['local_folder'], ABSPATH );
+
+		if ( defined( 'BACKUP_LOCAL_FOLDER' ) )
+			$this->create_dir( $this->local_folder );
+
 		$this->dump_file = $this->local_folder . '/dump.sql';
 		$upload_dir = wp_upload_dir();
 
@@ -301,7 +312,6 @@ class Backup {
 		$this->exclude[] = $this->local_folder;
 
 		register_activation_hook( __FILE__, array( &$this, 'activate' ) );
-		register_deactivation_hook( __FILE__, array( &$this, 'deactivate' ) );
 
 		// Add custom cron intervals
 		add_filter( 'cron_schedules', array( &$this, 'cron_add_intervals' ) );
@@ -446,44 +456,8 @@ class Backup {
 			update_user_meta( $this->user_id, "metaboxhidden_".$this->pagehook, $meta_value );
 		}
 
-		// try to create the default backup folder and .htaccess file
-		if ( wp_mkdir_p( $this->local_folder ) ) {
-			if ( !@is_file( $this->local_folder . "/.htaccess" ) )
-				file_put_contents( $this->local_folder . "/.htaccess", "Order allow,deny\nDeny from all" );
-		}
-	}
-
-	/**
-	 * Backup Deactivation.
-	 *
-	 * This function is called whenever the plugin is being deactivated and removes
-	 * all files and directories it created as well as the options stored in the database.
-	 * It also revokes access to the Google Account associated with it and removes all scheduled events created.
-	 */
-	public function deactivate() {
-		// Revoke Google OAuth2 authorization.
-		if ( $this->goauth->is_authorized() )
-			$this->goauth->revoke_refresh_token( $this->options['refresh_token'] );
-
-		// Unschedule events.
-		if ( wp_next_scheduled( 'backup_schedule' ) ) {
-			wp_clear_scheduled_hook( 'backup_schedule' );
-		}
-
-		// Delete options.
-		delete_option( 'backup_options' );
-
-		if ( ! $this->user_id )
-			$this->user_id = get_current_user_id();
-
-		// Remove options page user meta.
-		delete_user_meta( $this->user_id, "meta-box-order_".$this->pagehook );
-		delete_user_meta( $this->user_id, "closedpostboxes_".$this->pagehook );
-		delete_user_meta( $this->user_id, "metaboxhidden_".$this->pagehook );
-		delete_user_meta( $this->user_id, "screen_layout_".$this->pagehook );
-
-		// Delete all files created by the plugin.
-		delete_path( $this->local_folder, true );
+		// try to create the default backup folder files
+		$this->create_dir( $this->local_folder );
 	}
 
 	/**
@@ -503,24 +477,9 @@ class Backup {
 			$this->options['enabled_transports']  = $this->http_transports;
 			$this->options['ssl_verify']          = true;
 			$this->options['email_notify']        = false;
-			$this->options['plugin_version']      = $this->version;
 			$this->options['user_info']           = array();
 			$this->options['backup_list']         = array();
 
-			if ( ! $this->goauth->is_authorized() ) {
-				if ( defined( 'BACKUP_CLIENT_ID' ) ) {
-					$this->options['client_id'] = BACKUP_CLIENT_ID;
-					$this->goauth->set_option( 'client_id', $this->options['client_id'] );
-				}
-				if ( defined( 'BACKUP_CLIENT_SECRET' ) ) {
-					$this->options['client_secret'] = BACKUP_CLIENT_SECRET;
-					$this->goauth->set_option( 'client_secret', $this->options['client_secret'] );
-				}
-				if ( defined( 'BACKUP_REFRESH_TOKEN' ) ) {
-					$this->options['refresh_token'] = BACKUP_REFRESH_TOKEN;
-					$this->goauth->set_option( 'refresh_token', $this->options['refresh_token'] );
-				}
-			}
 			if ( $this->goauth->is_authorized() )
 				$this->set_user_info();
 
@@ -568,6 +527,9 @@ class Backup {
 				$this->options['resume_attempts']
 			);
 		}
+
+		// Save the new plugin version
+		$this->options['plugin_version'] = $this->version;
 	}
 
 	/**
@@ -656,11 +618,12 @@ class Backup {
 		add_screen_option( 'layout_columns', array( 'max' => 2, 'default' => 2 ) );
 
 		// Check if the local folder is writable
-		if ( !@is_writable( $this->local_folder ) )
+		if ( ( !@is_dir( $this->local_folder ) && !$this->create_dir( $this->local_folder ) ) ||
+			!@is_writable( $this->local_folder ) )
 			$this->messages['error'][] = sprintf(
-				__( 'The local path \'%s\' is not writable. Please change the permissions or choose another directory.',
+				__( "The local path %s is not writable. Please change the permissions or choose another directory.",
 					$this->text_domain
-				), $this->local_folder
+				), '<kbd>' . esc_html( $this->local_folder ) . '</kbd>'
 			);
 	}
 
@@ -720,15 +683,15 @@ class Backup {
 			<p><?php _e('Before backups can be uploaded to Google Drive, you need to authorize the plugin and give it permission to make changes on your behalf.', $this->text_domain ); ?></p>
 			<p>
 				<label for="client_id"><?php _e( 'Client ID', $this->text_domain ); ?></label>
-				<input id="client_id" name="client_id" type='text' class="large-text" value='<?php echo esc_html( $this->options['client_id'] ); ?>' />
+				<input id="client_id" name="client_id" type='text' <?php __checked_selected_helper( defined( 'BACKUP_CLIENT_ID' ), true, true, 'readonly' ); ?> class="large-text" value='<?php echo esc_html( $this->options['client_id'] ); ?>' />
 			</p>
 			<p>
 				<label for="client_secret"><?php _e( 'Client secret', $this->text_domain ); ?>
-				<input id="client_secret" name='client_secret' type='text' class="large-text" value='<?php echo esc_html( $this->options['client_secret'] ); ?>' />
+				<input id="client_secret" name='client_secret' type='text' <?php __checked_selected_helper( defined( 'BACKUP_CLIENT_SECRET' ), true, true, 'readonly' ); ?> class="large-text" value='<?php echo esc_html( $this->options['client_secret'] ); ?>' />
 			</p>
 			<p class="para hide-if-js">
 				<label for="refresh_token"><?php _e( 'Refresh token', $this->text_domain ); ?>
-				<input id="refresh_token" name='refresh_token' type='text' class="large-text" value='<?php echo esc_html( $this->options['refresh_token'] ); ?>' />
+				<input id="refresh_token" name='refresh_token' type='text' <?php __checked_selected_helper( defined( 'BACKUP_REFRESH_TOKEN' ), true, true, 'readonly' ); ?> class="large-text" value='<?php echo esc_html( $this->options['refresh_token'] ); ?>' />
 			</p>
 			<p>
 				<input name="authorize" type="submit" class="button-secondary" value="<?php _e( 'Authorize', $this->text_domain ) ?>" /> <a href="#refresh_token" class="show-para hide-if-no-js"><?php _e( 'More', $this->text_domain ); ?></a>
@@ -749,10 +712,17 @@ class Backup {
 				<?php echo $this->options['user_info']['email']; ?><br />
 				<span class="approved"><?php _e( "Authorized", $this->text_domain ); ?></span>
 			</div>
-		<?php } ?>
-		<p><?php _e( 'Authorization to use Google Drive has been granted. You can revoke it at any time by clicking the button below.', $this->text_domain ); ?></p>
+		<?php }
+		?>
+		<p><?php _e( 'Authorization to use Google Drive has been granted.', $this->text_domain ); ?></p>
 		<p class="para hide-if-js"><input type="text" readonly="readonly" class="click-select large-text" value="<?php echo esc_html( $this->options['refresh_token'] ); ?>" /></p>
-		<p><a href="<?php echo $this->redirect_uri; ?>&state=revoke" class="button-secondary"><?php _e( 'Revoke access', $this->text_domain ); ?></a> <a href="#token-select" class="show-para hide-if-no-js"><?php _e( 'Show token', $this->text_domain ); ?></a></p><?php
+		<p><?php
+			if ( defined( 'BACKUP_REFRESH_TOKEN' ) ) {
+				?><a class="button disabled"><?php
+			} else {
+				?><a href="<?php echo $this->redirect_uri; ?>&state=revoke" class="button-secondary"><?php
+			}
+			?><?php _e( 'Revoke access', $this->text_domain ); ?></a> <a href="#token-select" class="show-para hide-if-no-js"><?php _e( 'Show token', $this->text_domain ); ?></a></p><?php
 		}
 	}
 
@@ -973,19 +943,26 @@ class Backup {
 					$this->options['local_number'] = $local_number;
 
 			// Handle local folder change.
-			if ( isset( $_POST['local_folder'] ) && $_POST['local_folder'] != $this->options['local_folder'] ) {
+			if (
+				!defined( 'BACKUP_LOCAL_FOLDER' ) && isset( $_POST['local_folder'] ) &&
+				$_POST['local_folder'] != $this->options['local_folder']
+			) {
 				$path = absolute_path( $_POST['local_folder'], ABSPATH );
-				if ( !wp_mkdir_p( $path ) )
-					$this->messages['error'][] = sprintf(
-						__( 'Could not create directory \'%s\'. You might want to create it manually and set the right permissions.',
-							$this->text_domain ), '<kbd>' . $path . '</kbd>'
-					);
-				else {
-					if ( ! @is_file( $this->local_folder . "/.htaccess" ) )
-						file_put_contents( $this->local_folder . "/.htaccess", "Order allow,deny\nDeny from all" );
-					$this->options['local_folder'] = $_POST['local_folder'];
-					$this->local_folder = $path;
+				if ( ! @file_exists( $path ) || @is_file( path_join( $path, '.backup' ) ) ) {
+					if ( !$this->create_dir( $path ) )
+						$this->messages['error'][] = sprintf(
+							__( "Could not create directory %s. You might want to create it manually and set the right permissions.",
+								$this->text_domain ), '<kbd>' . esc_html( $path ) . '</kbd>'
+						);
+					else {
+						$this->options['local_folder'] = $_POST['local_folder'];
+						$this->local_folder = $path;
+					}
 				}
+				else
+					$this->messages['error'][] = sprintf(
+						__( "The directory %s already exists.", $this->text_domain ), '<kbd>' . esc_html( $path ) . '</kbd>'
+					);
 			}
 
 			// Handle transports.
@@ -1021,7 +998,7 @@ class Backup {
 				$this->options['exclude_list'] = array();
 
 			// Save Drive folder.
-			if ( isset( $_POST['drive_folder'] ) )
+			if ( !defined( 'BACKUP_DRIVE_FOLDER' ) && isset( $_POST['drive_folder'] ) )
 				$this->options['drive_folder'] = $_POST['drive_folder'];
 
 			// Save backup title.
@@ -1092,7 +1069,14 @@ class Backup {
 	function manual_backup() {
 		if ( isset( $_GET['backup'] ) && $this->options['backup_token'] == $_GET['backup'] ) {
 			echo '<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Backup Process</title><link rel="stylesheet" id="install-css"  href="http://songpane.com/wp-admin/css/install.css" type="text/css" media="all" /></head><body><style>p{font-family:monospace;border-radius:3px;padding:3px;margin:6px 0}.warning{background:#ffec8b;border:1px solid #fc0}.error{background:#ffa0a0;border:1px solid #f04040}#progress{width:400px;height:30px;margin:5px auto;border:1px solid #dfdfdf;background:#f9f9f9;padding:1px;overflow:hidden}span{background:#fc0;display:inline-block;height:30px}</style><h1 id="logo">Backup Process</h1>';
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>' . __( 'Backup Process', $this->text_domain ) . '</title>
+		<link rel="stylesheet" id="install-css"  href="' . site_url( 'wp-admin/css/install.css' ) . '" type="text/css" media="all" />
+		<style>p{font-family:monospace;border-radius:3px;padding:3px;margin:6px 0}.warning{background:#ffec8b;border:1px solid #fc0}.error{background:#ffa0a0;border:1px solid #f04040}#progress{width:400px;height:30px;margin:5px auto;border:1px solid #dfdfdf;background:#f9f9f9;padding:1px;overflow:hidden}span{background:#fc0;display:inline-block;height:30px}</style>
+	</head>
+	<body><h1 id="logo">' . __( 'Backup Process', $this->text_domain ) . '</h1>';
 			if ( isset( $_GET['retry'] ) )
 				$this->retry_backup();
 			else
@@ -1129,18 +1113,24 @@ class Backup {
 				'attempt'   => 0,
 			);
 
+			// Save info about our new backup now, so we can have access to the log file even if MySQL connection is stolen.
+			update_option( 'backup_options', $this->options );
+
 			// Log environment information.
 			if ( ! $z = phpversion( 'zip' ) )
 				$z = 'false';
-			$c = curl_version();
-			$c = $c['version'];
+			$c = '';
+			if ( in_array( 'curl', $this->options['enabled_transports'] ) && function_exists( 'curl_version' ) ) {
+				$c = curl_version();
+				$c = '; CURL ' . $c['version'];
+			}
 			$env = "Environment: Backup " . $this->version .
 							  "; WordPress " . $wp_version .
 							  "; PHP " . phpversion() .
 							  "; SAPI " . php_sapi_name() .
 							  "; OS " . PHP_OS .
 							  "; ZIP " . $z .
-							  "; CURL " . $c;
+							  $c;
 			if ( (bool) ini_get( 'safe_mode' ) )
 				$env .= "; Safe mode ON";
 			$env .= "; Time limit " . ini_get( 'max_execution_time' ) . "s" .
@@ -1149,12 +1139,22 @@ class Backup {
 			$this->log( "NOTICE", $env );
 		}
 
+		// We can't hook to WP's shudown hook because we need to pass the $id.
+		register_shutdown_function( array( &$this, 'handle_timeout' ), $id );
+
+		$file_name = sanitize_file_name( $this->options['backup_list'][$id]['title'] ) . '.zip';
+		$file_path = $this->local_folder . '/' . $file_name;
+
+		if ( @is_file( $file_path ) )
+			$this->options['backup_list'][$id]['file_path'] = $file_path;
+
 		if ( empty( $this->options['backup_list'][$id]['file_path'] ) ) {
 			// Check if the backup folder is writable
-			if ( ! @is_writable( $this->local_folder ) ) {
+			if ( ( !@is_dir( $this->local_folder ) && !$this->create_dir( $this->local_folder ) ) ||
+				!@is_writable( $this->local_folder ) ) {
 				$this->log( 'ERROR', sprintf(
-					__( 'The directory \'%s\' does not exist or is not writable.', $this->text_domain),
-					$this->local_folder
+					__( "The directory '%s' does not exist or is not writable.", $this->text_domain ),
+					esc_html( $this->local_folder )
 				));
 				$this->reschedule_backup( $id );
 			}
@@ -1202,11 +1202,9 @@ class Backup {
 			$sources = array_merge( $sources, $include );
 
 			// Create archive from the sources list.
-			$file_name = sanitize_file_name( $this->options['backup_list'][$id]['title'] ) . '.zip';
-			$file_path = $this->local_folder . '/' . $file_name;
 			$this->log( 'NOTICE', sprintf(
-				__( 'Attempting to create archive \'%s\'.', $this->text_domain ),
-				$file_name
+				__( "Attempting to create archive '%s'.", $this->text_domain ),
+				esc_html( $file_name )
 			) );
 
 			if ( ! phpversion( 'zip' ) )
@@ -1218,7 +1216,7 @@ class Backup {
 			}
 			delete_path( $this->dump_file );
 			$this->log( 'NOTICE', sprintf(
-				__( 'Successfully archived %1$s files in %2$s seconds. Archive file size is %3$s.', $text_domain ),
+				__( 'Successfully archived %1$s files in %2$s seconds. Archive file size is %3$s.', $this->text_domain ),
 				number_format_i18n( $zip['count'] ),
 				number_format_i18n( $zip['time'], 3 ),
 				size_format( filesize( $file_path ), 2 )
@@ -1253,8 +1251,8 @@ class Backup {
 			if ( is_string( $location ) ) {
 				$res = $location;
 				$this->log( 'NOTICE', sprintf(
-					__( 'Uploading file with title \'%s\'.', $this->text_domain ),
-					$this->options['backup_list'][$id]['title']
+					__( "Uploading file with title '%s'.", $this->text_domain ),
+					esc_html( $this->options['backup_list'][$id]['title'] )
 				) );
 				$d = 0;
 				echo '<div id="progress">';
@@ -1267,19 +1265,12 @@ class Backup {
 						echo '<span style="width:' . $b . '%"></span>';
 						$d += $b;
 					}
+					$this->options['backup_list'][$id]['percentage'] = $p;
+					$this->options['backup_list'][$id]['speed'] = $this->gdocs->get_upload_speed();
 				} while ( is_string( $res ) );
 				echo '</div>';
 
 				if ( is_wp_error( $res ) ) {
-					if ( 'timeout' == $res->get_error_code() ) {
-						$mess = $res->get_error_message();
-						if ( $percent = $this->gdocs->get_upload_percentage() )
-							$mess .= ' Managed to upload ' . round( $percent, 2 ) . '% of the file.';
-						if ( $speed = size_format( $this->gdocs->get_upload_speed() ) )
-							$mess .= ' The upload speed was ' . $speed . '/s.';
-						$this->log( "WARNING", $mess );
-						$this->reschedule_backup( $id, false );
-					}
 					$this->log_wp_error( $res );
 					$this->reschedule_backup( $id );
 				}
@@ -1296,11 +1287,14 @@ class Backup {
 			}
 			elseif ( true === $location )
 				$this->log( 'WARNING', sprintf(
-					__( 'The file \'%s\' is already uploaded.', $this->text_domain ),
-					$this->options['backup_list'][$id]['file_path']
+					__( "The file '%s' is already uploaded.", $this->text_domain ),
+					esc_html( $this->options['backup_list'][$id]['file_path'] )
 				) );
 			$this->options['backup_list'][$id]['drive_id'] = $this->gdocs->get_file_id();
+			unset( $this->options['backup_list'][$id]['percentage'], $this->options['backup_list'][$id]['speed'] );
 			$this->update_quota();
+			if ( empty( $this->options['user_info'] ) )
+				$this->set_user_info();
 		}
 		$this->options['backup_list'][$id]['status'] = 1;
 		$this->purge_backups();
@@ -1468,7 +1462,7 @@ class Backup {
 		foreach ( $this->messages as $type => $messages ) {
 			$ret .= '<div class="' . $type . '">';
 			foreach ( $messages as $message )
-				$ret .= '<p>' . esc_html( $message ) . '</p>';
+				$ret .= '<p>' . $message . '</p>';
 			$ret .= '</div>';
 		}
 		if ( $ret )
@@ -1481,7 +1475,7 @@ class Backup {
 	function error_notice() {
 		$msg = '<h3>Backup failed!</h3>';
 		foreach ( $this->options['messages']['error'] as $m )
-			$msg .= '<p>' . esc_html( $m ) . '</p>';
+			$msg .= '<p>' . $m . '</p>';
 		if ( isset( $_GET['page'] ) && 'backup' == $_GET['page'] )
 			unset( $this->options['messages']['error'] );
 		else
@@ -1525,7 +1519,7 @@ class Backup {
 				// Request and set user_info
 				$this->set_user_info();
 			}
-			elseif ( 'revoke' == $_GET['state'] ) {
+			elseif ( 'revoke' == $_GET['state'] && !defined( 'BACKUP_REFRESH_TOKEN' ) ) {
 				$result = $this->goauth->revoke_refresh_token();
 				if ( is_wp_error( $result ) ) {
 					$this->messages['error'][] = __( 'Could not revoke authorization!', $this->text_domain );
@@ -1542,25 +1536,33 @@ class Backup {
 		}
 		if ( !isset( $_POST['client_id'] ) || !isset( $_POST['client_secret'] ) ) {
 			$this->messages['error'][] = __(
-				'You need to specify a \'Client ID\' and a \'Client secret\' in order to authorize the Backup plugin.',
+				"You need to specify a 'Client ID' and a 'Client secret' in order to authorize the Backup plugin.",
 				$this->text_domain
 			);
 			return;
 		}
-		$this->options['client_id'] = $_POST['client_id'];
-		$this->options['client_secret'] = $_POST['client_secret'];
+		if ( !defined( 'BACKUP_CLIENT_ID' ) )
+			$this->options['client_id'] = $_POST['client_id'];
+		if ( !defined( 'BACKUP_CLIENT_SECRET' ) )
+			$this->options['client_secret'] = $_POST['client_secret'];
+		$this->goauth->set_options( array(
+			'client_id'     => $this->options['client_id'],
+			'client_secret' => $this->options['client_secret'],
+			'redirect_uri'  => $this->redirect_uri
+		) );
 		if ( empty( $_POST['refresh_token'] ) ) {
-			$this->goauth->set_options( array(
-				'client_id'     => $this->options['client_id'],
-				'client_secret' => $this->options['client_secret'],
-				'redirect_uri'  => $this->redirect_uri
-			) );
 			$this->goauth->request_authorization( $this->scope, 'token' );
 			exit;
 		}
-		$this->options['refresh_token'] = $_POST['refresh_token'];
+		if ( !defined( 'BACKUP_REFRESH_TOKEN' ) ) {
+			$this->options['refresh_token'] = $_POST['refresh_token'];
+			$this->goauth->set_options( array( 'refresh_token' => $this->options['refresh_token'] ) );
+		}
 	}
 
+	/**
+	 * Requests and saves user info (name, email, picture) from Google's userinfo service.
+	 */
 	function set_user_info() {
 		$token = $this->goauth->get_access_token();
 		if ( is_wp_error( $token ) )
@@ -1610,6 +1612,52 @@ class Backup {
 	function shutdown() {
 		if ( false !== get_option( 'backup_options' ) )
 			update_option( 'backup_options', $this->options );
+	}
+
+	/**
+	 * This function runs at shutdown even if the script times out, so we can let the user know what the problem is.
+	 *
+	 * @param integer $id The ID of the current backup
+	 */
+	function handle_timeout( $id ) {
+		// Check if the archive wasn't created
+		if ( empty( $this->options['backup_list'][$id]['file_path'] ) ) {
+			$this->log( "ERROR",
+				__( 'Did not finish creating the backup archive. Try increasing the time limit.', $this->text_domain ) );
+			$this->reschedule_backup( $id );
+		}
+
+		// Check if we have an incomplete upload
+		else if ( isset( $this->options['backup_list'][$id]['percentage'] ) ) {
+			echo '</div>'; // close the #progress div;
+			$msg = __( 'The upload process timed out but can be resumed.', $this->text_domain ).
+			sprintf(
+				__( ' Managed to upload %s%% of the file.', $this->text_domain ),
+				round( $this->options['backup_list'][$id]['percentage'], 2 )
+			).
+			sprintf(
+				__( ' The upload speed was %s/s.', $this->text_domain ),
+				size_format( $this->options['backup_list'][$id]['speed'] )
+			);
+			$this->log( "WARNING", $msg );
+			$this->reschedule_backup( $id, false );
+		}
+	}
+
+	/**
+	 * Create the backup directory and initial files.
+	 *
+	 * @param string $dir
+	 */
+	function create_dir( $dir ) {
+		if ( wp_mkdir_p( $dir ) ) {
+			if (!@is_file( $dir . "/.backup" ) )
+				touch( $dir . "/.backup" );
+			if ( !@is_file( $dir . "/.htaccess" ) )
+				file_put_contents( $dir . "/.htaccess", "Order allow,deny\nDeny from all" );
+			return true;
+		}
+		return false;
 	}
 
 	/**

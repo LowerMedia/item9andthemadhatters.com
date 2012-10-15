@@ -2,7 +2,7 @@
 /* wppa-ajax.php
 *
 * Functions used in ajax requests
-* version 4.6.0
+* version 4.7.18
 *
 */
 add_action('wp_ajax_wppa', 'wppa_ajax_callback');
@@ -17,12 +17,102 @@ global $wppa;
 	$wppa['error'] = '0';
 	$wppa['out']   = '';
 
-	// ALTHOUGH WE ARE HERE AS FRONT END VISITOR, is_admin() is true. 
+	// ALTHOUGH IF WE ARE HERE AS FRONT END VISITOR, is_admin() is true. 
 	// So, $wppa_opt switches are 'yes' or 'no' and not true or false.
 	
 	$wppa_action = $_REQUEST['wppa-action'];
 	
 	switch ($wppa_action) {
+		case 'makeorigname':
+			$photo = $_REQUEST['photo-id'];
+			$from = $_REQUEST['from'];
+			if ( $from == 'fsname' ) {
+				$type = $wppa_opt['wppa_art_monkey_link'];
+			}
+			elseif ( $from == 'popup' ) {
+				$type = $wppa_opt['wppa_art_monkey_popup_link'];
+			}
+			else {
+				echo '||7||'.__('Unknown source of request', 'wppa');
+				exit;
+			}
+			$data = $wpdb->get_row($wpdb->prepare("SELECT * FROM `".WPPA_PHOTOS."` WHERE `id` = %s", $photo), 'ARRAY_A');
+			if ($data) {	// The photo is supposed to exist
+				// Make the name
+				$name = __($data['name']);
+				$name = sanitize_file_name($name);
+				$dotpos = strrpos($name, '.');
+				if ( $dotpos !== false ) $name = substr($name, '0', $dotpos);
+				if ( strlen($name) == '0' ) {
+					echo '||1||'.__('Empty filename', 'wppa');
+					exit;
+				}
+				// Make the filenames
+				$source = WPPA_UPLOAD_PATH.'/'.$photo.'.'.$data['ext'];
+				$dest = WPPA_UPLOAD_PATH.'/temp/'.$name.'.'.$data['ext'];
+				$zipfile = WPPA_UPLOAD_PATH.'/temp/'.$name.'.zip';
+				$tempdir = WPPA_UPLOAD_PATH.'/temp';
+				if ( ! is_dir($tempdir) ) @ mkdir($tempdir);
+				if ( ! is_dir($tempdir) ) {
+					echo '||2||'.__('Unable to create tempdir', 'wppa');
+					exit;
+				}
+				// Remove obsolete files
+				// To prevent filling up diskspace, divide lifetime by 2 and repeat removing obsolete files until count <= 10
+				$filecount = 100;
+				$lifetime = 3600;
+				while ( $filecount > 10 ) {
+					$files = glob(WPPA_UPLOAD_PATH.'/temp/*');
+					$filecount = 0;
+					if ( $files ) {	
+						$timnow = time();
+						$expired = $timnow - $lifetime;
+						foreach ( $files as $file ) {
+							$modified = filemtime($file);
+							if ( $modified < $expired ) unlink($file);
+							else $filecount++;
+						}
+					}
+					$lifetime /= 2;
+				}
+				// Make the files
+				if ( $type == 'file' ) {
+					copy($source, $dest);
+					$ext = $data['ext'];
+				}
+				elseif ( $type == 'zip' ) {
+					if ( ! class_exists('ZipArchive') ) {
+						echo '||8||'.__('Unable to create zip archive', 'wppa');
+						exit;
+					}
+					$ext = 'zip';
+					$wppa_zip = new ZipArchive;
+					$wppa_zip->open($zipfile, 1);
+					$wppa_zip->addFile($source, basename($dest));
+					$wppa_zip->close();						
+				}
+				else {
+					echo '||6||'.__('Unknown type', 'wppa');
+					exit;
+				}
+				
+				$desturl = WPPA_UPLOAD_URL.'/temp/'.$name.'.'.$ext;
+				echo '||0||'.$desturl;	// No error: return url
+				exit;
+			}
+			else {
+				echo '||9||'.__('The photo does no longer exist', 'wppa');
+				exit;
+			}
+			exit;
+			break;
+			
+		case 'tinymcedialog':
+			$result = wppa_make_tinymce_dialog();
+			echo $result;
+			exit;
+			break;
+			
 		case 'rate':
 			// Get commandline args
 			$photo  = $_REQUEST['wppa-rating-id'];
@@ -68,6 +158,12 @@ global $wppa;
 				if ( $iret === false ) {
 					echo '0||102||'.$errtxt;
 					exit;															// Fail on storing vote
+				}
+				else {
+					//SUCCESSFUL RATING, ADD POINTS
+					if( function_exists('cp_alterPoints') && is_user_logged_in() ) {
+						cp_alterPoints(cp_currentUser(), $wppa_opt['wppa_cp_points_rating']);
+					}
 				}
 				$myavgrat = $rating;
 			}
@@ -215,11 +311,14 @@ global $wppa;
 						$iret1 = $wpdb->query($wpdb->prepare('DELETE FROM `'.WPPA_RATING.'` WHERE `photo` = %s', $photo['id']));
 						$iret2 = $wpdb->query($wpdb->prepare('UPDATE `'.WPPA_PHOTOS.'` SET `mean_rating` = %s WHERE `id` = %s', '', $photo['id']));
 					}
-					if ($photos !== false && $iret1 !== false && $iret2 !== false) {
+					if ($photos && $iret1 !== false && $iret2 !== false) {
 						echo '||97||'.__('<b>Ratings cleared</b>', 'wppa').'||'.__('No ratings for this photo.', 'wppa');
 					}
-					else {
+					elseif ($photos) {
 						echo '||1||'.__('An error occurred while clearing ratings', 'wppa');
+					}
+					else {
+						echo '||97||'.__('<b>No photos in this album</b>', 'wppa').'||'.__('No ratings for this photo.', 'wppa');
 					}
 					exit;
 					break;
@@ -254,6 +353,22 @@ global $wppa;
 				case 'owner':
 					$itemname = __('Owner', 'wppa');
 					break;
+				case 'upload_limit_count':
+					wppa_ajax_check_range($value, false, '0', false, __('Upload limit count', 'wppa'));
+					if ( $wppa['error'] ) exit;
+					$oldval = $wpdb->get_var($wpdb->prepare('SELECT `upload_limit` FROM '.WPPA_ALBUMS.' WHERE `id` = %s', $album));
+					$temp = explode('/', $oldval);
+					$value = $value.'/'.$temp[1];
+					$item = 'upload_limit';
+					$itemname = __('Upload limit count', 'wppa');
+					break;
+				case 'upload_limit_time':
+					$oldval = $wpdb->get_var($wpdb->prepare('SELECT `upload_limit` FROM '.WPPA_ALBUMS.' WHERE `id` = %s', $album));
+					$temp = explode('/', $oldval);
+					$value = $temp[0].'/'.$value;
+					$item = 'upload_limit';
+					$itemname = __('Upload limit time', 'wppa');
+					break;
 				default:
 					$itemname = $item;
 			}
@@ -269,7 +384,51 @@ global $wppa;
 			wppa_clear_cache();
 			exit;
 			break;
+		
+		case 'update-comment-status':
+			$photo = $_REQUEST['wppa-photo-id'];
+			$nonce = $_REQUEST['wppa-nonce'];
+			$comid = $_REQUEST['wppa-comment-id'];
+			$comstat = $_REQUEST['wppa-comment-status'];
 			
+			// Check validity
+			if ( ! wp_verify_nonce($nonce, 'wppa_nonce_'.$photo) ) {
+				echo '||0||'.__('You do not have the rights to update comment status', 'wppa').$nonce;
+				exit;																// Nonce check failed
+			}
+
+			$iret = $wpdb->query($wpdb->prepare('UPDATE `'.WPPA_COMMENTS.'` SET `status` = %s WHERE `id` = %s', $comstat, $comid));
+			
+			if ( $iret !== false ) {
+				echo '||0||'.sprintf(__('Status of comment #%s updated', 'wppa'), $comid);
+			}
+			else {
+				echo '||1||'.sprintf(__('Error updating status comment #%s', 'wppa'), $comid);
+			}
+			exit;
+			break;
+			
+		case 'watermark-photo':
+			$photo = $_REQUEST['photo-id'];
+			$nonce = $_REQUEST['wppa-nonce'];
+		
+			// Check validity
+			if ( ! wp_verify_nonce($nonce, 'wppa_nonce_'.$photo) ) {
+				echo '||1||'.__('You do not have the rights to change photos', 'wppa');
+				exit;																// Nonce check failed
+			}
+			
+			$ext = $wpdb->get_var($wpdb->prepare("SELECT `ext` FROM `".WPPA_PHOTOS."` WHERE `id` = %s", $photo));
+			
+			if ( wppa_add_watermark(WPPA_UPLOAD_PATH.'/'.$photo.'.'.$ext) ) {
+				echo '||0||'.__('Watermark applied', 'wppa');
+				exit;
+			}
+			else {
+				echo '||1||'.__('An error occured while trying to apply a watermark', 'wppa');
+				exit;
+			}
+
 		case 'update-photo':
 			$photo = $_REQUEST['photo-id'];
 			$nonce = $_REQUEST['wppa-nonce'];
@@ -279,7 +438,7 @@ global $wppa;
 			
 			// Check validity
 			if ( ! wp_verify_nonce($nonce, 'wppa_nonce_'.$photo) ) {
-				echo '||0||'.__('You do not have the rights to update photo information', 'wppa').$nonce;
+				echo '||0||'.__('You do not have the rights to update photo information', 'wppa');
 				exit;																// Nonce check failed
 			}
 			
@@ -575,7 +734,13 @@ global $wppa;
 				case 'wppa_ovl_opacity':
 					wppa_ajax_check_range($value, false, '0', '100', __('Overlay opacity', 'wppa'));
 					break;
-					
+				case 'wppa_upload_limit_count':
+					wppa_ajax_check_range($value, false, '0', false, __('Upload limit', 'wppa'));
+					break;
+				case 'wppa_cp_points_comment':
+				case 'wppa_cp_points_rating':
+					wppa_ajax_check_range($value, false, '0', false, __('Cube Points points', 'wppa'));
+					break;
 				case 'wppa_rating_clear':
 					$iret1 = $wpdb->query($wpdb->prepare( 'TRUNCATE TABLE '.WPPA_RATING ) );
 					$iret2 = $wpdb->query($wpdb->prepare( 'UPDATE '.WPPA_PHOTOS.' SET mean_rating="0", rating_count="0" WHERE id > -1' ) );

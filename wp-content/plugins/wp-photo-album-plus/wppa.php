@@ -2,7 +2,7 @@
 /*
 Plugin Name: WP Photo Album Plus
 Description: Easily manage and display your photo albums and slideshows within your WordPress site.
-Version: 4.6.2
+Version: 4.7.18
 Author: J.N. Breetvelt a.k.a OpaJaap
 Author URI: http://wppa.opajaap.nl/
 Plugin URI: http://wordpress.org/extend/plugins/wp-photo-album-plus/
@@ -17,7 +17,7 @@ global $wpdb;
 /* when new options are added and when the wppa_setup() routine 
 /* must be called right after update for any other reason.
 */
-global $wppa_revno; $wppa_revno = '462';	
+global $wppa_revno; $wppa_revno = '479';	
 
 /* CONSTANTS
 /*
@@ -25,16 +25,20 @@ global $wppa_revno; $wppa_revno = '462';
 /* PHP_VERSION_ID is available as of PHP 5.2.7, if our 
 /* version is lower than that, then emulate it
 */
+global $wppa_loadtime; $wppa_loadtime = - microtime(true);
 if ( ! defined( 'PHP_VERSION_ID' ) ) {
 	$version = explode( '.', PHP_VERSION );
 	define( 'PHP_VERSION_ID', ( $version[0] * 10000 + $version[1] * 100 + $version[2] ) );
 }
-define( 'WPPA_ALBUMS',   $wpdb->prefix . 'wppa_albums' );
-define( 'WPPA_PHOTOS',   $wpdb->prefix . 'wppa_photos' );
-define( 'WPPA_RATING',   $wpdb->prefix . 'wppa_rating' );
-define( 'WPPA_COMMENTS', $wpdb->prefix . 'wppa_comments' );
-define( 'WPPA_IPTC',	 $wpdb->prefix . 'wppa_iptc' );
-define( 'WPPA_EXIF', 	 $wpdb->prefix . 'wppa_exif' );
+/* To run WPPA+ on a multisite in single site mode, add to wp-config.php: define('WPPA_MULTISITE_GLOBAL', true); */
+if ( ! defined('WPPA_MULTISITE_GLOBAL') ) define ('WPPA_MULTISITE_GLOBAL', false);
+if ( is_multisite() && WPPA_MULTISITE_GLOBAL ) $wppa_prefix = $wpdb->base_prefix; else $wppa_prefix = $wpdb->prefix;
+define( 'WPPA_ALBUMS',   $wppa_prefix . 'wppa_albums' );
+define( 'WPPA_PHOTOS',   $wppa_prefix . 'wppa_photos' );
+define( 'WPPA_RATING',   $wppa_prefix . 'wppa_rating' );
+define( 'WPPA_COMMENTS', $wppa_prefix . 'wppa_comments' );
+define( 'WPPA_IPTC',	 $wppa_prefix . 'wppa_iptc' );
+define( 'WPPA_EXIF', 	 $wppa_prefix . 'wppa_exif' );
 																// Standard examples
 define( 'WPPA_FILE', basename( __FILE__ ) );					// wppa.php
 define( 'WPPA_PATH', dirname( __FILE__ ) );						// /.../wp-content/plugins/wp-photo-album-plus
@@ -53,6 +57,7 @@ require_once 'wppa-slideshow-widget.php';
 require_once 'wppa-gp-widget.php';
 require_once 'wppa-comment-widget.php';
 require_once 'wppa-thumbnail-widget.php';
+require_once 'wppa-lasten-widget.php';
 
 /* COMMON FUNCTIONS */
 require_once 'wppa-common-functions.php';
@@ -66,3 +71,5 @@ else require_once 'wppa-non-admin.php';
 
 /* ADD AJAX */
 require_once 'wppa-ajax.php';
+
+$wppa_loadtime += microtime(true);

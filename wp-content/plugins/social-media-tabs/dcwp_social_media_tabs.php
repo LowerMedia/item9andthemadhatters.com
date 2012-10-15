@@ -5,7 +5,7 @@
 		Tags: social media, facebook, twitter, tweets, google+1, flickr, YouTube, pinterest, rss, profile, tabs, social networks, bookmarks, buttons, animated, jquery, flyout, sliding
 		Description: Social media tabs allows you to add facebook, google +1, twitter, flickr, pinterest, YouTube subscription and RSS profiles and feeds to any widget area with stylish sliding tabs. Option also to have the tabs slide out from the side of the browsers
 		Author: Lee Chestnutt
-		Version: 1.4.1
+		Version: 1.4.2
 		Author URI: http://www.designchemical.com
 */
 

@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: WordPress Meta Robots
-Plugin URI: http://www.destio.de/tools/wp-meta-robots/
+Plugin URI: http://www.destio.de/tools/wordpress-meta-robots/
 Description: This plugin will give you full control of the <code>meta robots</code> tag for each post or page.
 Author: Designstudio, Philipp Speck
-Version: 1.9
+Version: 2.0
 Author URI: http://www.destio.de/
 */
 
@@ -13,7 +13,9 @@ if ( !class_exists ('wp_meta_robots_plugin')) {
 
 	function meta_robots_addcolumn() {
 		global $wpdb;
-		$wpdb->query("ALTER TABLE $wpdb->posts ADD COLUMN meta_robots varchar(20)");
+		if (false === $wpdb->query("SELECT meta_robots FROM $wpdb->posts LIMIT 0")) {
+			$wpdb->query("ALTER TABLE $wpdb->posts ADD COLUMN meta_robots varchar(20)");
+		}
 	}
 			
 	function meta_robots_insert_post($pID) {

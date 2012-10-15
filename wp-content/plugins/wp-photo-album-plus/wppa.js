@@ -1,8 +1,8 @@
 // wppa.js
 //
-// conatins slideshow, theme and ajax code
+// conatins slideshow, theme, ajax and lightbox code
 //
-// Version 4.6.1
+// Version 4.7.18
 
 // Part 1: Slideshow
 //
@@ -11,29 +11,34 @@
 // The vars without leading underscore are 'external' and get a value from html
 
 // 'External' variables (public)
-var wppaFullValignFit = new Array();
+var wppaFullValign = new Array();
+var wppaFullHalign = new Array();
 var wppaFullFrameDelta = new Array();
 var wppaAnimationSpeed;
 var wppaImageDirectory;
-var wppaAutoColumnWidth = false;
+var wppaAutoColumnWidth = new Array();
+var wppaAutoColumnFrac = new Array();
 var wppaThumbnailAreaDelta;
 var wppaSlideShowTimeOut = 2500;
 var wppaFadeInAfterFadeOut = false;
 var wppaTextFrameDelta = 0;
 var wppaBoxDelta = 0;
 var wppaPreambule;
+var wppaHideWhenEmpty = false;
 var wppaThumbnailPitch = new Array();
 var wppaFilmStripLength = new Array();
 var wppaFilmStripMargin = new Array();
 var wppaFilmStripAreaDelta = new Array();
 var wppaFilmShowGlue;
 var wppaIsMini = new Array();
-var wppa_portrait_only = new Array();
+var wppaPortraitOnly = new Array();
 var wppaSlideShow;				// = 'Slideshow' or its translation
 var wppaPhoto;					// = 'Photo' or its translation
 var wppaOf;						// = 'of' or its translation
 var wppaNextPhoto;				// = 'Next photo' or its translation
 var wppaPreviousPhoto;			// = 'Previous photo' or its translation
+var wppaSlower;
+var wppaFaster;
 var wppaNextP;
 var wppaPrevP;
 var wppaStart = 'Start';		// defaults
@@ -60,6 +65,7 @@ var wppaFontWeightNumbarActive = '';
 
 var wppaNumbarMax = '10';
 var wppaAjaxUrl = '';
+var wppaLocale = '';
 var wppaNextOnCallback = false;
 var wppaRatingUseAjax = false;
 var wppaStarOpacity = 0.2;
@@ -77,6 +83,14 @@ var wppaRatingMax = 5;
 var wppaRatingDisplayType = 'graphic';
 var wppaRatingPrec = 2;
 var wppaFilmPageSize = new Array();
+var wppaAspectRatio = new Array();
+var wppaFullSize = new Array();
+var wppaStretch = false;
+var wppaThumbSpaceAuto = false;
+var wppaMinThumbSpace = 4;
+var wppaMagnifierCursor = '';
+var wppaArtMonkyLink = 'none';
+var wppaShare = '';
 
 // 'Internal' variables (private)
 var _wppaId = new Array();
@@ -109,11 +123,20 @@ var _wppaSkipRated = new Array();
 var _wppaLbTitle = new Array();
 var _wppaStateCount = 0;
 var _wppaDidGoto = new Array();
-var _wppaTopMoc = 0;
+var wppaTopMoc = 0;
+var wppaColWidth = new Array();
+var _wppaShareUrl = new Array();
 
 jQuery(document).ready(function(){
-	_wppaLog('ready', 0);
-	if (wppaAutoColumnWidth) _wppaDoAutocol(0);
+	_wppaLog('ready', 1);
+	
+	// Autocol?
+	for (mocc = 1; mocc <= wppaTopMoc; mocc++) {
+		if (wppaAutoColumnWidth[mocc]) {
+			wppaColWidth[mocc] = 0;
+			_wppaDoAutocol(mocc);
+		}
+	}
 	_wppaTextDelay = wppaAnimationSpeed;
 	if (wppaFadeInAfterFadeOut) _wppaTextDelay *= 2;
 });
@@ -122,7 +145,8 @@ jQuery(document).ready(function(){
 // These functions check the validity and store the users request to be executed later if busy and if applicable.
 
 // This is an entrypoint to load the slide data
-function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, photoid, avgrat, myrat, rateurl, linkurl, linktitle, linktarget, iwtimeout, commenthtml, iptchtml, exifhtml, lbtitle) {
+function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, photoid, avgrat, myrat, rateurl, linkurl, linktitle, linktarget, iwtimeout, commenthtml, iptchtml, exifhtml, lbtitle, shareurl) {
+var cursor;
 	if ( ! _wppaSlides[mocc] ) {
 		_wppaSlides[mocc] = new Array();
 		_wppaNames[mocc] = new Array();
@@ -136,12 +160,10 @@ function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, phot
 		_wppaFg[mocc] = 0;
 		_wppaIsBusy[mocc] = false;
 		_wppaFirst[mocc] = true;
-		wppaFullValignFit[mocc] = false;
 		_wppaId[mocc] = new Array();
 		_wppaAvg[mocc] = new Array();
 		_wppaMyr[mocc] = new Array();
 		_wppaVRU[mocc] = new Array();
-		wppa_portrait_only[mocc] = false;
 		_wppaLinkUrl[mocc] = new Array(); // linkurl;
 		_wppaLinkTitle[mocc] = new Array(); // linktitle;
 		_wppaLinkTarget[mocc] = new Array();
@@ -153,15 +175,26 @@ function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, phot
 		_wppaLbTitle[mocc] = new Array();
 		_wppaDidGoto[mocc] = false;
 		wppaSlidePause[mocc] = false;
-		_wppaTopMoc = mocc;
+		_wppaShareUrl[mocc] = new Array();
 	}
-    _wppaSlides[mocc][id] = ' src="' + url + '" alt="' + name + '" class="theimg big" ';
+	
+	// Cursor
+	cursor = 'default';
+	if (linkurl != '') cursor = 'pointer';
+	else if (wppaLightBox=='wppa') cursor =  'url('+wppaImageDirectory+wppaMagnifierCursor+'),pointer';
+
+	
+    _wppaSlides[mocc][id] = ' src="' + url + '" alt="' + name + '" class="theimg theimg-'+mocc+' big" ';
+	
+		// Add swipe
+		_wppaSlides[mocc][id] += 'ontouchstart="wppaTouchStart(event, this.id, '+mocc+');"  ontouchend="wppaTouchEnd(event);" ontouchmove="wppaTouchMove(event);" ontouchcancel="wppaTouchCancel(event);" ';
+
 		// Add 'old' width and height only for non-auto
-		if ( ! wppaAutoColumnWidth ) _wppaSlides[mocc][id] += 'width="' + width + '" height="' + height + '" ';
-	_wppaSlides[mocc][id] += 'style="' + size + '; display:none;">';	// was block
+		if ( ! wppaAutoColumnWidth[mocc] ) _wppaSlides[mocc][id] += 'width="' + width + '" height="' + height + '" ';
+	_wppaSlides[mocc][id] += 'style="' + size + '; cursor:'+cursor+'; display:none;">';	// was block
     _wppaNames[mocc][id] = name;
     _wppaDsc[mocc][id] = desc;
-	_wppaId[mocc][id] = photoid;		// reqd for rating and comment
+	_wppaId[mocc][id] = photoid;		// reqd for rating and comment and monkey
 	_wppaAvg[mocc][id] = avgrat;		// avg ratig value
 	_wppaMyr[mocc][id] = myrat;		// my rating
 	_wppaVRU[mocc][id] = rateurl;		// url that performs the vote and returns to the page
@@ -177,6 +210,7 @@ function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, phot
 	_wppaExifHtml[mocc][id] = exifhtml;
 	_wppaUrl[mocc][id] = url;
 	_wppaLbTitle[mocc][id] = lbtitle;
+	_wppaShareUrl[mocc][id] = shareurl;
 }
 
 function wppaSpeed(mocc, faster) {
@@ -272,6 +306,7 @@ function wppaGotoKeepState(mocc, idx) {
 	_wppaDidGoto[mocc] = true;
 	_wppaGotoKeepState(mocc, idx);
 }
+
 function _wppaGotoKeepState(mocc, idx) {	
 	if ( _wppaSSRuns[mocc] ) {
 		_wppaGotoRunning(mocc,idx);
@@ -280,7 +315,6 @@ function _wppaGotoKeepState(mocc, idx) {
 		_wppaGoto(mocc,idx);
 	}
 }
-
 
 function wppaGotoRunning(mocc, idx) {
 	// Goto the requested slide and start running
@@ -362,7 +396,7 @@ function _wppaNextSlide(mocc, mode) {
 	    
 		// Display name, description and comments
 		jQuery("#imagedesc-"+mocc).html(_wppaDsc[mocc][_wppaCurIdx[mocc]]);
-		jQuery("#imagetitle-"+mocc).html(_wppaNames[mocc][_wppaCurIdx[mocc]]);
+		jQuery("#imagetitle-"+mocc).html(wppaMakeNameHtml(mocc));
 		jQuery("#comments-"+mocc).html(_wppaCommentHtml[mocc][_wppaCurIdx[mocc]]);
 		jQuery("#iptc-"+mocc).html(_wppaIptcHtml[mocc][_wppaCurIdx[mocc]]);
 		jQuery("#exif-"+mocc).html(_wppaExifHtml[mocc][_wppaCurIdx[mocc]]);
@@ -391,7 +425,7 @@ function _wppaNextSlide(mocc, mode) {
 	// See if the filmstrip needs wrap around before shifting to the right location
 	_wppaCheckRewind(mocc);
 
-	if (wppaAutoColumnWidth) _wppaDoAutocol(mocc);
+	if (wppaAutoColumnWidth[mocc]) _wppaDoAutocol(mocc);
 	// Give free for a while to enable rendering of what we have done so far
 	setTimeout('_wppaNextSlide_2('+mocc+')', 10);	// to be continued
 }
@@ -416,7 +450,7 @@ function _wppaNextSlide_2(mocc) {
 	// Remove spinner
 	_wppaUnloadSpinner(mocc);
 	// Do autocol if required
-	if (wppaAutoColumnWidth) _wppaDoAutocol(mocc);
+	if (wppaAutoColumnWidth[mocc]) _wppaDoAutocol(mocc);
 	// Hide subtitles
 	if (_wppaSSRuns[mocc] != -1) {	// not stop in progress
 		if (!_wppaToTheSame) {
@@ -463,6 +497,8 @@ function _wppaNextSlide_3(mocc) {
 	// Repair standard css
 	jQuery(olSli).css({marginLeft:0, width:w});
 	jQuery(nwSli).css({marginLeft:0, width:w});
+
+	wppaFormatSlide(mocc);
 	
 	switch (wppaAnimationType) {
 	
@@ -546,6 +582,7 @@ function _wppaNextSlide_3(mocc) {
 		case 'turnover':
 			switch (dir) {
 				case 'left':
+/*	there is a z-order problem here, if you can fix it, i would be glad
 					jQuery(olSli).css({zIndex:81});
 					jQuery(olSli).animate({width:0}, wppaAnimationSpeed, "swing");
 					jQuery(olImg).animate({marginLeft:0, width:0, paddingLeft:0, paddingRight:0}, wppaAnimationSpeed, "swing", _wppaNextSlide_4(mocc));
@@ -553,17 +590,20 @@ function _wppaNextSlide_3(mocc) {
 					jQuery(nwImg).fadeIn(10);
 					jQuery(olImg).fadeOut(10);
 					break;
+*/
 				case 'right':
-					var nwImgWid = parseInt(jQuery(nwImg).css('width'));
+					var nwImgWid = parseInt(jQuery(nwSli).css('width'));
 					var nwMarLft = parseInt(jQuery(nwImg).css('marginLeft'));
+//		alert(nwImg+' '+nwImgWid+'  '+nwMarLft);
 					jQuery(olSli).css({zIndex:80});
 					jQuery(nwSli).css({zIndex:81, width:0});
-					jQuery(nwImg).css({width:0, marginLeft:0});
+					jQuery(nwImg).css({maxWidth:0, marginLeft:0});
 					jQuery(nwImg).fadeIn(10);
 					jQuery(nwSli).animate({width:w}, wppaAnimationSpeed, "swing");
-					jQuery(nwImg).animate({width:nwImgWid, marginLeft:nwMarLft}, wppaAnimationSpeed, "swing", _wppaNextSlide_4(mocc));
+					jQuery(nwImg).animate({maxWidth:nwImgWid, marginLeft:nwMarLft}, wppaAnimationSpeed, "swing", _wppaNextSlide_4(mocc));
 					jQuery(olImg).delay(wppaAnimationSpeed).fadeOut(10);
 					break;
+
 				case 'none':
 					jQuery(nwImg).fadeIn(10);
 					setTimeout('_wppaNextSlide_4('+mocc+')', 10);
@@ -582,22 +622,19 @@ function _wppaNextSlide_4(mocc) {
 
 	var nw = _wppaFg[mocc];
 	var ol = 1-nw;
+
+	var olSli	= "#theslide"+ol+"-"+mocc;
+	var nwSli 	= "#theslide"+nw+"-"+mocc;
+
+	// Make sure title and onclick of the new image (slide) are in sight
+	jQuery(olSli).css({zIndex:80});
+	jQuery(nwSli).css({zIndex:81});
 	
     // Next is now current // put here for swipe
 	_wppaCurIdx[mocc] = _wppaNxtIdx[mocc];
 
-	// set height to fit if reqd
-	if (wppa_portrait_only[mocc]) {
-		h = jQuery('#theimg'+_wppaFg[mocc]+'-'+mocc).css('height');
-		jQuery('#slide_frame-'+mocc).css('height', parseInt(h)+'px');
-	}
-	else if (wppaFullValignFit[mocc]) {
-		h = parseInt(jQuery('#theimg'+_wppaFg[mocc]+'-'+mocc).css('height')) + wppaFullFrameDelta[mocc];
-		jQuery('#slide_frame-'+mocc).css('height', h+'px');
-		jQuery('.bbb-'+mocc).css('height', h+'px');
-		jQuery('#slide_frame-'+mocc).css('minHeight', '0px');
-	}
-
+	wppaFormatSlide(mocc);
+	
 	// Display counter and arrow texts
 	if (wppaIsMini[mocc]) {
 		jQuery('#counter-'+mocc).html( (_wppaCurIdx[mocc]+1)+' / '+_wppaSlides[mocc].length );
@@ -629,7 +666,11 @@ function _wppaNextSlide_5(mocc) {
 	if (!_wppaToTheSame) {	
 		// Restore subtitles
 		jQuery('#imagedesc-'+mocc).html(_wppaDsc[mocc][_wppaCurIdx[mocc]]);
-		jQuery('#imagetitle-'+mocc).html(_wppaNames[mocc][_wppaCurIdx[mocc]]);
+		if ( wppaHideWhenEmpty ) {
+			if ( _wppaDsc[mocc][_wppaCurIdx[mocc]] == '' || _wppaDsc[mocc][_wppaCurIdx[mocc]] == '&nbsp;' ) jQuery('#descbox-'+mocc).css('display', 'none');
+			else jQuery('#descbox-'+mocc).css('display', '');
+		}
+		jQuery("#imagetitle-"+mocc).html(wppaMakeNameHtml(mocc));
 		// Restore comments html
 		jQuery("#comments-"+mocc).html(_wppaCommentHtml[mocc][_wppaCurIdx[mocc]]);
 		// Restor IPTC
@@ -658,19 +699,36 @@ function _wppaNextSlide_5(mocc) {
 	else {								// No toggle pending
 		wppaUpdateLightboxes(); 		// Refresh lighytbox
 		// Update addthis url and title if ( ( this is non-mini ) AND ( this is the only running non-mini OR there are no running non-minis ) )
-		if ( ! wppaIsMini[mocc] ) {	// This is a non-mini
+		if ( ! wppaIsMini[mocc] ) {			// This is NOT a widget
+			if ( ! _wppaSSRuns[mocc] ) {	// This is not running
+				// Update addthis share url
+				if ( wppaShare == 'site' ) url = _wppaShareUrl[mocc][_wppaCurIdx[mocc]]; //wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
+				if ( wppaShare == 'file' ) url = _wppaUrl[mocc][_wppaCurIdx[mocc]];
+				wppaUpdateAddThisUrl(url, _wppaNames[mocc][_wppaCurIdx[mocc]]);					
+				// Push state
+				wppaPushStateSlide(mocc, _wppaCurIdx[mocc], _wppaShareUrl[mocc][_wppaCurIdx[mocc]]);
+			}
+			/*
 			var nRuns = 0;
 			var i=1;
-			while (i<=_wppaTopMoc) {
+			while (i<=wppaTopMoc) {
 				if ( typeof(_wppaSlides[i]) != 'undefined' && _wppaSSRuns[i] && ! wppaIsMini[i]) {
 					nRuns++;
 				}
 				i++;
 			}
 			if ( nRuns == 0 || ( nRuns == 1 && _wppaSSRuns[mocc] ) ) {	// No running OR This is the only running
-				wppaUpdateAddThisUrl(wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]), _wppaNames[mocc][_wppaCurIdx[mocc]]);	
-				wppaPushStateSlide(mocc, _wppaCurIdx[mocc]);					// Add to history stack
+				var url = '';
+				if ( wppaShare == 'site' ) url = _wppaShareUrl[mocc][_wppaCurIdx[mocc]]; //wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
+				if ( wppaShare == 'file' ) url = _wppaUrl[mocc][_wppaCurIdx[mocc]];
+				console.log('ShareLink='+url);
+				if (url != '') {
+
+					wppaUpdateAddThisUrl(url, _wppaNames[mocc][_wppaCurIdx[mocc]]);	
+					wppaPushStateSlide(mocc, _wppaCurIdx[mocc]);					// Add to history stack
+				}
 			}
+			*/
 		}
 		// If running: Wait for next slide
 		if (_wppaSSRuns[mocc]) {				
@@ -681,6 +739,20 @@ function _wppaNextSlide_5(mocc) {
 	_wppaIsBusy[mocc] = false;					// No longer busy
 }
  
+function wppaMakeNameHtml(mocc) {
+var result;
+	switch (wppaArtMonkyLink) {
+	case 'file':
+	case 'zip':
+		result = '<a title="Download" onclick="wppaAjaxMakeOrigName('+mocc+', '+_wppaId[mocc][_wppaCurIdx[mocc]]+');" >'+_wppaNames[mocc][_wppaCurIdx[mocc]]+'</a>';
+		break;
+	case 'none':
+		result = _wppaNames[mocc][_wppaCurIdx[mocc]];
+		break;
+	}
+	return result;
+}
+
 function wppaMakeTheSlideHtml(mocc, bgfg, idx) {
  
 	if (_wppaLinkUrl[mocc][idx] != '') {	// Link explicitly given
@@ -689,6 +761,7 @@ function wppaMakeTheSlideHtml(mocc, bgfg, idx) {
 												'</a>');
 	}
 	else {
+//alert('bgfg='+bgfg+', lt='+_wppaLinkTitle[mocc][idx]);
 		if (wppaLightBox == '') {			// No link and no lightbox
 			jQuery("#theslide"+bgfg+"-"+mocc).html('<img title="'+_wppaNames[mocc][idx]+'" id="theimg'+bgfg+'-'+mocc+'" '+_wppaSlides[mocc][idx]);
 		}
@@ -703,8 +776,9 @@ function wppaMakeTheSlideHtml(mocc, bgfg, idx) {
 				}
 			}
 			// Current slide
-			html += '<a href="'+_wppaUrl[mocc][idx]+'" title="'+_wppaLbTitle[mocc][idx]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']">'+
-					'<img title="'+_wppaNames[mocc][idx]+'" id="theimg'+bgfg+'-'+mocc+'" '+_wppaSlides[mocc][idx]+
+			html += '<a href="'+_wppaUrl[mocc][idx]+'" target="'+_wppaLinkTarget[mocc][idx]+'" title="'+_wppaLbTitle[mocc][idx]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']">'+
+//					'<img title="'+_wppaNames[mocc][idx]+'" id="theimg'+bgfg+'-'+mocc+'" '+_wppaSlides[mocc][idx]+
+					'<img title="'+_wppaLinkTitle[mocc][idx]+'" id="theimg'+bgfg+'-'+mocc+'" '+_wppaSlides[mocc][idx]+
 					'</a>';
 			// After current slide // This does NOT work on lightbox 3 !
 			if (wppaLightBox=='wppa') {
@@ -717,7 +791,141 @@ function wppaMakeTheSlideHtml(mocc, bgfg, idx) {
 			jQuery("#theslide"+bgfg+"-"+mocc).html(html);
 		}
 	}
-	// jQuery("#theimg"+bgfg+"-"+mocc).hide();	// == display:none
+}
+
+function wppaFormatSlide(mocc) {
+
+	// vars we have
+	var imgid    = 'theimg'+_wppaFg[mocc]+'-'+mocc;
+	var slideid  = 'theslide'+_wppaFg[mocc]+'-'+mocc;
+	var frameid  = 'slide_frame-'+mocc;
+	var contw    = wppaColWidth[mocc];
+	var elm      = document.getElementById(imgid);
+	if ( ! elm ) return;	// No slide present
+	if (typeof(contw) == 'undefined' || contw == 0) {
+		contw = wppaGetContainerWidth(mocc); 
+		wppaColWidth[mocc] = contw;
+	}
+	var natwidth  = elm.naturalWidth;
+		if (typeof(natwidth)=='undefined') natwidth = parseInt(elm.style.maxWidth);
+	var natheight = elm.naturalHeight;
+		if (typeof(natheight)=='undefined') natheight = parseInt(elm.style.maxHeight);
+	var aspect    = wppaAspectRatio[mocc];
+	var fullsize  = wppaFullSize[mocc];
+	var delta     = wppaFullFrameDelta[mocc];
+
+	// Switches we have
+	var ponly   = wppaPortraitOnly[mocc];
+	var valign  = wppaFullValign[mocc]; if (typeof(valign)=='undefined') valign = 'none';
+	var halign  = wppaFullHalign[mocc]; if (typeof(halign)=='undefined') halign = 'none';
+	var stretch = wppaStretch;
+	
+	// vars to be calculated:
+	var imgw, imgh;		// image width and height
+	var margl, margt;	// image margins
+	var slidew, slideh;	// slide width and height
+	var framew, frameh;	// frame
+	
+	// Calculate
+	if ( ponly ) {
+		imgw = contw - delta;
+		imgh = parseInt(imgw * natheight / natwidth);
+		margl = 0;
+		margt = 0;
+		slidew = contw;
+		slideh = imgh + delta;
+		framew = contw;
+		frameh = slideh;
+		// Size
+		jQuery('#'+frameid).css({width:framew, height:frameh});
+		jQuery('#'+slideid).css({width:slidew, height:slideh});
+		jQuery('#'+imgid).css({width:imgw, height:imgh});
+	}
+	else {
+		// not 'ponly' so we have a fixed display area. First assume the container is the hor limit
+		framew = contw;
+		// If the fullsize (Table I-B1) is smaller than the container width The frame is scaled down to fit the fullsize
+		if ( fullsize < contw ) {
+			framew = fullsize;				// The fullsize appears to be the hor limit
+		}
+		frameh = parseInt(framew * aspect);	// Always obey the occurences aspect ratio
+		slidew = framew;
+		slideh = frameh;
+		if ( stretch || natwidth >= (framew-delta) || natheight >= (frameh-delta) ) {	// Image big enough
+			if ( ((natheight+delta) / (natwidth+delta)) > aspect ) {	// vertical limit
+				imgh = frameh - delta;
+				imgw = parseInt(imgh * natwidth / natheight);
+			}
+			else {	// horizontal limit
+				imgw = framew - delta;
+				imgh = parseInt(imgw * natheight / natwidth);
+			}
+		}
+		else {															// Image too small
+			imgw = natwidth;
+			imgh = natheight;
+		}
+
+		// Align vertical
+		if (valign != 'default' && valign != 'none') {
+			switch (valign) {
+				case 'top':				
+					margt = 0;
+					break;
+				case 'center':
+					margt = parseInt((frameh - (imgh+delta)) / 2);
+					break;
+				case 'bottom':
+					margt = frameh - (imgh+delta);
+					break;
+				case 'fit':
+					margt = 0;
+					frameh = imgh + delta;
+					slideh = imgh + delta;
+					break;
+				default:
+				//	alert('Unknown v align:'+valign+' occ='+mocc);
+			}
+			jQuery('#'+imgid).css({marginTop:margt, marginBottom:0});
+		}
+
+		// Size (after v align because 'fit' changes the frameh and slidh)
+		jQuery('#'+frameid).css({width:framew, height:frameh});
+		jQuery('#'+slideid).css({width:slidew, height:slideh});
+		jQuery('#'+imgid).css({width:imgw, height:imgh});
+
+		// Align horizontal
+		if (valign != 'default' && valign != 'none' && halign != 'none' && halign != 'default') {
+			switch (halign) {
+				case 'left':
+					margl = 0;
+					break;
+				case 'center':
+					margl = parseInt((contw - framew) / 2);
+					break;
+				case 'right':
+					margl = contw - framew;
+					break;
+				default:
+				//	alert('Unknown h align:'+halign+' occ='+mocc);
+			}
+			if (margl < 0) margl = 0;
+			jQuery('#'+imgid).css({marginLeft:'auto', marginRight:'auto'});
+			jQuery('#'+frameid).css({marginLeft:margl});
+			// Do not let ver 4 browser shortcomings workarounds spoil the max dimensions
+//			jQuery('#'+imgid).css('max-height', imgh+'px');
+//			jQuery('#'+imgid).css('max-width', imgw+'px');
+		}
+	}
+	
+	// Size Big Browse Buttons
+	var bbbwidth = parseInt(framew/3);
+	var leftmarg = bbbwidth*2;
+	
+	jQuery('#bbb-'+mocc+'-l').css({height:frameh, width:bbbwidth, left:0});
+	jQuery('#bbb-'+mocc+'-r').css({height:frameh, width:bbbwidth, left:leftmarg});
+	
+//	jQuery('#'+imgid).css({cursor:url(),pointer});
 }
 
 function wppaUpdateLightboxes() {
@@ -943,44 +1151,77 @@ function _wppaUnloadSpinner(mocc) {
 	jQuery('#spinner-'+mocc).html('');
 }
 
+function wppaGetContainerWidth(mocc) {
+	var elm = document.getElementById('wppa-container-'+mocc);
+	
+	if ( !wppaAutoColumnWidth[mocc] ) return elm.clientWidth;
+	
+	while (elm.parentNode.clientWidth == 0) {
+		elm = elm.parentNode;
+	}
+	return elm.parentNode.clientWidth * wppaAutoColumnFrac[mocc];
+}
+
 function _wppaDoAutocol(mocc) {
 	_wppaLog('DoAutocol', mocc);
 	var w;
 	var h;
-	if (!wppaAutoColumnWidth) return;
+	if (!wppaAutoColumnWidth[mocc]) return;
 	
-	w = document.getElementById('wppa-container-1').parentNode.clientWidth;
-	
-	jQuery(".wppa-container").css('width',w);
-	ws = w - 2 * wppaSlideBorderWidth;
-
-	jQuery(".theimg").css('width',ws);
-	jQuery(".thumbnail-area").css('width',w - wppaThumbnailAreaDelta);
-	wppaFilmStripLength[mocc] = w - wppaFilmStripAreaDelta[mocc];
-
-	jQuery("#filmwindow-"+mocc).css('width',wppaFilmStripLength[mocc]);
-
-	jQuery(".wppa-text-frame").css('width',w - wppaTextFrameDelta);
-	jQuery(".wppa-cover-box").css('width',w - wppaBoxDelta);
-	
-	// See if there are slideframe images
-	h = 0;
-
-	if (document.getElementById('theimg0-'+mocc)) {
-		h = document.getElementById('theimg0-'+mocc).clientHeight;
+	// Container
+	w = wppaGetContainerWidth(mocc);//document.getElementById('wppa-container-'+mocc).parentNode.clientWidth;
+	if (wppaColWidth[mocc] == w && w != 0) {
+		setTimeout('_wppaDoAutocol('+mocc+')', 100);
+		return;
 	}
-	if (h == 0) {
-		if (document.getElementById('theimg1-'+mocc)) {
-			h = document.getElementById('theimg1-'+mocc).clientHeight;
+
+	wppaColWidth[mocc] = w;
+	jQuery(".wppa-container-"+mocc).css('width',w);
+
+	// Covers
+	jQuery(".wppa-text-frame-"+mocc).css('width',w - wppaTextFrameDelta);
+	jQuery(".wppa-cover-box-"+mocc).css('width',w - wppaBoxDelta);
+
+	// Thumbnail area
+	jQuery(".thumbnail-area-"+mocc).css('width',w - wppaThumbnailAreaDelta);
+	// Thumbframes
+	if ( wppaThumbSpaceAuto ) {
+		var tfw = parseInt(jQuery(".thumbnail-frame-"+mocc).css('width'));
+		if (tfw) {
+			var minspc = wppaMinThumbSpace;
+			var weff = w - wppaThumbnailAreaDelta - 7;
+			var nthumbs = parseInt(weff / (tfw + minspc));
+			var availsp = weff - nthumbs * tfw;
+			var newspc = parseInt(0.5 + availsp / (nthumbs+1));			
+			
+			jQuery(".thumbnail-frame-"+mocc).css({marginLeft:newspc});
 		}
 	}
-	// Set slideframe height to the height found (if any)
-	if (h > 0) {
-		jQuery("#slide_frame-"+mocc).css('height',h);
-	}
-	else {		// Try again later
-		setTimeout('_wppaDoAutocol('+mocc+')', wppaAnimationSpeed);
-	}
+	// User upload
+	jQuery(".wppa-file").css('width',w - 16); 
+	
+	// Slide
+	wppaFormatSlide(mocc);
+	
+	// Comments
+	jQuery(".wppa-comment-textarea-"+mocc).css('width',w * 0.7);
+	
+	// Filmstrip
+	wppaFilmStripLength[mocc] = w - wppaFilmStripAreaDelta[mocc];
+	jQuery("#filmwindow-"+mocc).css('width',wppaFilmStripLength[mocc]);
+	
+	// Single photo
+	jQuery(".wppa-sphoto-"+mocc).css('width',w);
+	jQuery(".wppa-simg-"+mocc).css('width',w - 2*wppaSlideBorderWidth );
+	jQuery(".wppa-simg-"+mocc).css('height', '');
+	
+	// Mphoto
+	jQuery(".wppa-mphoto-"+mocc).css('width',w + 10);
+	jQuery(".wppa-mimg-"+mocc).css('width',w);
+	jQuery(".wppa-mimg-"+mocc).css('height', '');
+
+	// Check again after 50 ms	
+	setTimeout('_wppaDoAutocol('+mocc+')', 50);
 }
 
 function _wppaCheckRewind(mocc) {
@@ -1330,7 +1571,7 @@ function _wppaShowMetaData(mocc, key) {
 }
 
 function _wppaLog(text, mocc) {
-	
+//return;	
 	if ( ! document.getElementById('wppa-debug-'+mocc) ) return;	// Debugging off
 	var elm = document.getElementById('wppa-debug-'+mocc);
 	var old_html = elm.innerHTML;
@@ -1350,20 +1591,24 @@ function _wppaLog(text, mocc) {
 
 function wppaGetCurrentFullUrl(mocc, idx) {
 		
-var url = document.location.href;
+var xurl = document.location.href;
+var url;
 	
 	// Remove &wppa-photo=... if present.
-	var temp1 = url.split("?");
+	var temp1 = xurl.split("?");
 	var temp2 = 'nil';
 	var temp3;
 	var i = 0;
 	var first = true;
 	if (temp1[1]) temp2 = temp1[1].split("&");
+
+	var albumSeen = false;
 	url = temp1[0];	// everything before '?'
 	if (temp2 != 'nil') {
 		if (temp2.length > 0) {
 			while (i<temp2.length) {
 				temp3 = temp2[i].split("=");
+				if (temp3[0] == "wppa-album") albumSeen = true;
 				if (temp3[0] != "wppa-photo") {
 					if (first) url += "?";
 					else url += "&";
@@ -1374,6 +1619,8 @@ var url = document.location.href;
 			}
 		}
 	}
+	if ( !albumSeen ) return '';
+	
 	// Append new &wppa-photo=...
 	if (first) url += "?";
 	else url += "&";
@@ -1488,17 +1735,29 @@ function wppaDetermineSwipeDirection() {
 
 function wppaProcessingRoutine() {
 	var swipedElement = document.getElementById(triggerElementID);
-	if ( swipeDirection == 'left' ) {
-		wppaNext(wppaMocc);
-		wppaMocc = 0;
-	} 
-	else if ( swipeDirection == 'right' ) {
-		wppaPrev(wppaMocc);
-		wppaMocc = 0;
-	} 
-	else if ( swipeDirection == 'up' ) {
-	} 
-	else if ( swipeDirection == 'down' ) {
+	if ( wppaMocc == -1 ) { // swipe on ligtbox image
+		if ( swipeDirection == 'left' ) {
+			wppaOvlShowNext();
+			wppaMocc = 0;
+		}
+		else if ( swipeDirection == 'right' ) {
+			wppaOvlShowPrev();
+			wppaMocc = 0;
+		}		
+	}
+	else {	// swipe on slideshow
+		if ( swipeDirection == 'left' ) {
+			wppaNext(wppaMocc);
+			wppaMocc = 0;
+		} 
+		else if ( swipeDirection == 'right' ) {
+			wppaPrev(wppaMocc);
+			wppaMocc = 0;
+		} 
+		else if ( swipeDirection == 'up' ) {
+		} 
+		else if ( swipeDirection == 'down' ) {
+		}
 	}
 }
 
@@ -1543,29 +1802,37 @@ function wppaPopUp(mocc, elm, id, rating) {
 	
 	// Find handle to the popup image 
 	puImg = document.getElementById('wppa-img-'+mocc);
-	
+
+	// Compute ending sizes
+	if (puImg.naturalWidth) widthImgBig = puImg.naturalWidth;
+	else widthImgBig = parseInt(puImg.clientWidth);
+	if (puImg.naturalHeight) heightImgBig = puImg.naturalHeight;
+	else heightImgBig = parseInt(puImg.clientHeight);
+
 	// Set width of text fields to width of a landscape image	
-	if (puImg) jQuery(".wppa_pu_info").css('width', ((puImg.clientWidth > puImg.clientHeight ? puImg.clientWidth : puImg.clientHeight) - 8)+'px');	
+	if (puImg) jQuery(".wppa_pu_info").css('width', ((widthImgBig > heightImgBig ? widthImgBig : heightImgBig) - 8)+'px');	
 	// Compute starting coords
 	leftDivSmall = parseInt(elm.offsetLeft) - 7 - 5 - 1; // thumbnail_area:padding, wppa-img:padding, wppa-border; jQuery().css("padding") does not work for padding in css file, only when litaral in the tag
 	topDivSmall = parseInt(elm.offsetTop) - 7 - 5 - 1;		
 	// Compute starting sizes
 	widthImgSmall = parseInt(elm.clientWidth);
 	heightImgSmall = parseInt(elm.clientHeight);
-	// Compute ending sizes
-	widthImgBig = puImg.clientWidth; 
-	heightImgBig = parseInt(puImg.clientHeight);
-	widthImgBigSpace = puImg.clientWidth > puImg.clientHeight ? puImg.clientWidth : puImg.clientHeight;
+
+	widthImgBigSpace = widthImgBig > heightImgBig ? widthImgBig : heightImgBig;
 	// Compute ending coords
 	leftDivBig = leftDivSmall - parseInt((widthImgBigSpace - widthImgSmall) / 2);
 	topDivBig = topDivSmall - parseInt((heightImgBig - heightImgSmall) / 2);
 	
+	// Padding for portrait images
+	var lrPad = parseInt((widthImgBigSpace - widthImgBig) / 2);
+	
 	// Setup starting properties
 	jQuery('#wppa-popup-'+mocc).css({"marginLeft":leftDivSmall+"px","marginTop":topDivSmall+"px"});
-	jQuery('#wppa-img-'+mocc).css({"width":widthImgSmall+"px","height":heightImgSmall+"px"});
+	jQuery('#wppa-img-'+mocc).css({"paddingLeft":0,"paddingRight":0,"width":widthImgSmall+"px","height":heightImgSmall+"px"});
 	// Do the animation
 	jQuery('#wppa-popup-'+mocc).stop().animate({"marginLeft":leftDivBig+"px","marginTop":topDivBig+"px"}, 400);
-	jQuery('#wppa-img-'+mocc).stop().animate({"width":widthImgBig+"px","height":heightImgBig+"px"}, 400);
+	jQuery('#wppa-img-'+mocc).stop().animate({"paddingLeft":lrPad+"px","paddingRight":lrPad+"px","width":widthImgBig+"px","height":heightImgBig+"px"}, 400);
+//alert(widthImgBig+', '+heightImgBig);
 	// adding ", 'linear', wppaPopReady(occ) " fails, therefor our own timer to the "show info" module
 	_wppaTimer[mocc] = setTimeout('wppaPopReady('+mocc+')', 400);
 }
@@ -1576,13 +1843,13 @@ function wppaPopReady(mocc) {
 }
 
 // Dismiss popup
-function wppaPopDown(mocc) {		// return; //debug
+function wppaPopDown(mocc) {	//	 return; //debug
 	jQuery('#wppa-popup-'+mocc).html("");
 	return;
 }
 
 // Popup of fullsize image
-function wppaFullPopUp(mocc, id, url, xwidth, xheight) {
+function wppaFullPopUp(mocc, id, url, xwidth, xheight, ajaxurl) {
 	var height = xheight+50;
 	var width  = xwidth+14;
 	var name = '';
@@ -1599,13 +1866,42 @@ function wppaFullPopUp(mocc, id, url, xwidth, xheight) {
 		wnd.document.write('<head>');	
 			wnd.document.write('<style type="text/css">body{margin:0; padding:6px; background-color:'+wppaBackgroundColorImage+'; text-align:center;}</style>');
 			wnd.document.write('<title>'+name+'</title>');
-			wnd.document.write('<script type="text/javascript">function wppa_print(){document.getElementById("wppa_printer").style.visibility="hidden"; window.print(); }</script>');
+			wnd.document.write(
+			'<script type="text/javascript">function wppa_downl(id){'+
+				'var xmlhttp = new XMLHttpRequest();'+
+				'var url = "'+ajaxurl+'?action=wppa&wppa-action=makeorigname&photo-id='+id+'&from=popup";'+
+				'xmlhttp.open("GET",url,false);'+
+				'xmlhttp.send();'+
+				'if (xmlhttp.readyState==4 && xmlhttp.status==200) {'+
+					'var result = xmlhttp.responseText.split("||");'+
+					'if (result[1] == "0") {'+
+						'window.open(result[2]);'+
+						'return true;'+
+					'}'+
+					'else {'+
+						'alert("Error: "+result[1]+" "+result[2]);'+
+						'return false;'+
+					'}'+
+				'}'+
+				'else {'+
+					'alert("Comm error encountered");'+
+					'return false;'+
+				'}'+
+			'}</script>');
+			wnd.document.write(
+			'<script type="text/javascript">function wppa_print(){'+
+				'document.getElementById("wppa_printer").style.visibility="hidden"; '+
+				'document.getElementById("wppa_download").style.visibility="hidden"; '+
+				'window.print();'+
+			'}</script>');
 		wnd.document.write('</head>');
 		wnd.document.write('<body>');
 			wnd.document.write('<div style="width:'+xwidth+'px;">');
 				wnd.document.write('<img src="'+url+'" style="padding-bottom:6px;" /><br/>');
 				wnd.document.write('<div style="text-align:center">'+desc+'</div>');
-				var left = xwidth-30;
+				var left = xwidth-66;
+				wnd.document.write('<img src="'+wppaImageDirectory+'download.png" id="wppa_download" title="Download" style="position:absolute; top:6px; left:'+left+'px; background-color:'+wppaBackgroundColorImage+'; padding: 2px; cursor:pointer;" onclick="wppa_downl();" />');
+				left = xwidth-30;
 				wnd.document.write('<img src="'+wppaImageDirectory+'printer.png" id="wppa_printer" title="Print" style="position:absolute; top:6px; left:'+left+'px; background-color:'+wppaBackgroundColorImage+'; padding: 2px; cursor:pointer;" onclick="wppa_print();" />');
 			wnd.document.write('</div>');
 		wnd.document.write('</body>');
@@ -1724,34 +2020,65 @@ function wppaDoAjaxRender(mocc, ajaxurl, newurl) {
 					cont = xmlhttp.responseText;
 					try {
 						history.pushState({page: wppaHis, occur: mocc, type: 'html', html: cont}, "---", newurl);
+						console.log('Ajax rendering: History stack updated');
 					}
-					catch(err) {}
+					catch(err) {
+						console.log('Ajax rendering: Failed to update history stack');
+					}
 					if ( wppaFirstOccur == 0 ) wppaFirstOccur = mocc;
 				}
 				
-				// If lightbox 3 is on board, refresh the imagelist. It has just changed, you know!
-				if (typeof(myLightbox)!="undefined") myLightbox.updateImageList();
+				// If lightbox is on board, refresh the imagelist. It has just changed, you know!
+//				if (typeof(myLightbox)!="undefined") myLightbox.updateImageList();
+				wppaUpdateLightboxes();
+				
+				/* addthis */
+				wppaUpdateAddThisUrl(newurl, '');
+
+				/* Autocol? */
+				wppaColWidth[mocc] = 0;	// clear
+				//_wppaDoAutocol(mocc);
+				
+				// If it is a slideshow: Upate 'Faster' and 'Slower' to the desired language.
+				// The ajax stuff gets the admin language while we need the frontend language
+				jQuery('#speed0-'+mocc).html(wppaSlower);
+				jQuery('#speed1-'+mocc).html(wppaFaster);
+
 			}
 		}
+
 		// If it is a slideshow: Stop slideshow before pushing it on the stack
-		if ( _wppaCurIdx[mocc] ) _wppaStop(mocc);
+		if ( _wppaSSRuns[mocc] ) _wppaStop(mocc);
 		// Do the Ajax action
+		ajaxurl += '&locale='+wppaLocale;
 		xmlhttp.open('GET',ajaxurl,true);
 		xmlhttp.send();	
 	}
 	else {	// Ajax NOT possible
 		document.location.href = newurl;
-	}
 
-	/* addthis */
-	wppaUpdateAddThisUrl(newurl, '');
+		/* addthis */
+		wppaUpdateAddThisUrl(newurl, '');
+		/* Autocol? */
+		wppaColWidth[mocc] = 0;	// clear: forces recalc
+	}
 }
 
-function wppaPushStateSlide(mocc, slide) {
+function wppaPushStateSlide(mocc, slide, url) {
 
-	if ( wppaCanPushState ) {
-		var url = wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
-		history.pushState({page: wppaHis, occur: mocc, type: 'slide', slide: slide}, "---", url);
+	if ( ! wppaIsMini[mocc] ) {	// Not from a widget
+		if ( wppaCanPushState ) {
+//			var url = wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
+			if (url != '') {
+				try {
+					history.pushState({page: wppaHis, occur: mocc, type: 'slide', slide: slide}, "---", url);
+					console.log('Slide history stack updated');
+				}
+				catch(err) {
+					console.log('Slide history stack update failed');
+				}
+			}
+		}
 	}
 }
 
@@ -1765,20 +2092,29 @@ jQuery(document).ready(function(){
 	}
 });
 
-function wppaUpdateAddThisUrl(url, title) {
+function wppaUpdateAddThisUrl(xurl, title) {
 	if ( ! wppaAddThis ) return;	// No addthis activated
+	
+	var url = encodeURI(xurl);
+	
 	try {
 		addthis.update('share', 'url', url);
+		console.log('AddThis share url update to '+url+' succeeded');
 	}
 	catch(err){
+		console.log('AddThis share url update to '+url+' failed');
 	}
 	if (title != '') {
 		try {
 			addthis.update('share', 'title', title);
+			console.log('AddThis share title update to '+title+' succeeded');
 		}
 		catch(err) {
+			console.log('AddThis share title update to '+title+' failed');
 		}
 	}
+//  Does not exist unfortunately...
+//	addthis.update('share', 'description', 'Geupdate Desc');
 }
 
 // WPPA EMBEDDED NATIVE LIGHTBOX FUNCTIONALITY
@@ -1792,6 +2128,10 @@ var wppaOvlFirst = true;
 var wppaOvlKbHandler = '';
 var wppaOvlSizeHandler = '';
 var wppaOvlPadTop = 5;
+var wppaWindowInnerWidth;
+var wppaWindowInnerHeight;
+var wppaOvlIsSingle;
+
 // The next var values become overwritten in wppa-non-admin.php -> wppa_load_footer()
 var wppaOvlCloseTxt = 'CLOSE';
 var wppaOvlTxtHeight = 36;	// 12 * ( n lines of text including the n/m line )
@@ -1799,17 +2139,37 @@ var wppaOvlOpacity = 0.8;
 var wppaOvlOnclickType = 'none';
 var wppaOvlTheme = 'black';
 var wppaOvlAnimSpeed = 300;
+var wppaVer4WindowWidth = 800;
+var wppaVer4WindowHeight = 600;
+var wppaOvlFontFamily = 'Helvetica';
+var wppaOvlFontSize = '10';
+var wppaOvlFontColor = '';
+var wppaOvlFontWeight = 'bold';
+var wppaOvlLineHeight = '12';
+var wppaOvlShowCounter = true;
 
-jQuery(document).ready(function(){
+jQuery(document).ready(function(e){
 	wppaInitOverlay();
 });
 
-function wppaOvlShow(arg) {
+function wppaFindWindowSize() {
+_wppaLog('wppaFindWindowSize', 1);
+	wppaWindowInnerWidth = window.innerWidth;
+	wppaWindowInnerHeight = window.innerHeight;
+	if (typeof(wppaWindowInnerWidth)=='undefined') wppaWindowInnerWidth = jQuery(window).width(); // wppaVer4WindowWidth;
+	if (typeof(wppaWindowInnerHeight)=='undefined') wppaWindowInnerHeight = jQuery(window).height(); //wppaVer4WindowHeight;
+_wppaLog('winw='+wppaWindowInnerWidth+', winh='+wppaWindowInnerHeight, 1);
+}
 
-	if ( wppaLightBox != 'wppa' ) return;	// No, not this time.
+function wppaOvlShow(arg) {
+_wppaLog('wppaOvlShow', 1);
+	wppaFindWindowSize();
+	
+	// Prevent Weaver ii from hiding us
+	jQuery('#weaver-final').removeClass('wvr-hide-bang');
 	
 	// Display spinner
-	jQuery('#wppa-overlay-sp').css({left: (window.innerWidth/2)-16, top: (window.innerHeight/2)-16, visibility: 'visible'});
+	jQuery('#wppa-overlay-sp').css({left: (wppaWindowInnerWidth/2)-16, top: (wppaWindowInnerHeight/2)-16, visibility: 'visible'});
 	
 	var href;
 	if (parseInt(arg) == arg) {	// Arg is Numeric
@@ -1855,26 +2215,30 @@ function wppaOvlShow(arg) {
 	}
 
 	var mw = 250;
-
+_wppaLog('ovlOpac='+wppaOvlOpacity, 1);
 	jQuery('#wppa-overlay-bg').fadeTo(300, wppaOvlOpacity);
-	var lft = (window.innerWidth/2-125)+'px';
-	var ptp = (window.innerHeight/2-125)+'px';
+	var lft = (wppaWindowInnerWidth/2-125)+'px';
+	var ptp = (wppaWindowInnerHeight/2-125)+'px';
+_wppaLog('lft='+lft+', ptp='+ptp, 1);
 	jQuery('#wppa-overlay-ic').css({left: lft, paddingTop: ptp});
 	var txtcol = wppaOvlTheme == 'black' ? '#a7a7a7' : '#272727';	// Normal font
 	var qtxtcol = wppaOvlTheme == 'black' ? '#a7a7a7' : '#575757';	// Bold font
+	if (wppaOvlFontColor) txtcol = wppaOvlFontColor;
 	var html = 	'<div id="wppa-overlay-qt-txt"  style="position:absolute; right:16px; top:'+(wppaOvlPadTop-1)+'px; visibility:hidden; box-shadow:none; font-family:helvetica; font-weight:bold; font-size:14px; color:'+qtxtcol+'; cursor:pointer; " onclick="wppaOvlHide()" >'+wppaOvlCloseTxt+'&nbsp;&nbsp;</div>'+
 				'<img id="wppa-overlay-qt-img"  src="'+wppaImageDirectory+'smallcross-'+wppaOvlTheme+'.gif'+'" style="position:absolute; right:0; top:'+wppaOvlPadTop+'px; visibility:hidden; box-shadow:none; cursor:pointer" onclick="wppaOvlHide()" >'+
-				'<img id="wppa-overlay-img" src="'+wppaOvlUrl+'" style="border-width:16px; border-style:solid; border-color:'+wppaOvlTheme+'; margin-bottom:-15px; max-width:'+mw+'px; visibility:hidden; box-shadow:none;" />'+
-				'<div id="wppa-overlay-txt-container" style="padding:10px; background-color:'+wppaOvlTheme+'; color:'+txtcol+'; text-align:center; font-size: 10px; font-weight:bold; line-height:12px; visibility:hidden; box-shadow:none;" ></div>';
+				'<img id="wppa-overlay-img"'+
+				' ontouchstart="wppaTouchStart(event, \'wppa-overlay-img\', -1);"  ontouchend="wppaTouchEnd(event);" ontouchmove="wppaTouchMove(event);" ontouchcancel="wppaTouchCancel(event);" '+
+				' src="'+wppaOvlUrl+'" style="border-width:16px; border-style:solid; border-color:'+wppaOvlTheme+'; margin-bottom:-15px; max-width:'+mw+'px; visibility:hidden; box-shadow:none;" />'+
+				'<div id="wppa-overlay-txt-container" style="padding:10px; background-color:'+wppaOvlTheme+'; color:'+txtcol+'; text-align:center; font-family:'+wppaOvlFontFamily+'; font-size: '+wppaOvlFontSize+'px; font-weight:'+wppaOvlFontWeight+'; line-height:'+wppaOvlLineHeight+'px; visibility:hidden; box-shadow:none;" ></div>';
 	jQuery('#wppa-overlay-ic').html(html);
 	setTimeout('wppaOvlShow2()', 10);
 	return false;
 }
 function wppaOvlShow2() {
-	
+_wppaLog('wppaOvlShow2', 1);	
 	var img = document.getElementById('wppa-overlay-img');
 	
-	if (!img.complete) {
+	if (!img || !img.complete) {
 		setTimeout('wppaOvlShow2()', 10);	// Wait for load complete
 		return;
 	}
@@ -1885,6 +2249,7 @@ if (wppaOvlAnimSpeed!=0)
 	return false;
 }
 function wppaOvlShow3() {
+_wppaLog('wppaOvlShow3', 1);
 	// Remove spinner
 	jQuery('#wppa-overlay-sp').css({visibility: 'hidden'});
 	// Size to final dimensions
@@ -1896,6 +2261,7 @@ function wppaOvlShow3() {
 	return false;
 }
 function wppaOvlShow4() {
+_wppaLog('wppaOvlShow4', 1);
 
 	var cw = document.getElementById('wppa-overlay-img').clientWidth;
 	if (wppaOvlIdx != -1) {	// One out of a set
@@ -1907,13 +2273,17 @@ function wppaOvlShow4() {
 		if (wppaOvlIdx != (wppaOvlUrls.length-1)) vr = 'visible';
 		if (wppaOvlTxtHeight == 'auto') ht = '';
 		
-		var html = 	'<img src="'+wppaImageDirectory+'prev-'+wppaOvlTheme+'.gif" style="margin-top:-8px; float:left; '+vl+'; box-shadow:none;" onclick="wppaOvlShowPrev()" / >'+
-					'<img src="'+wppaImageDirectory+'next-'+wppaOvlTheme+'.gif" style="margin-top:-8px; float:right;'+vr+'; box-shadow:none;" onclick="wppaOvlShowNext()" / >'+
-					'<div id="wppa-overlay-txt" style="text-align:center; min-height:36px; '+ht+' overflow:hidden; box-shadow:none; width:'+(cw-80)+'px;" >'+(wppaOvlIdx+1)+'/'+wppaOvlUrls.length+'<br />'+wppaOvlTitle+'</div>';
+		var html = 	'<img src="'+wppaImageDirectory+'prev-'+wppaOvlTheme+'.gif" style="position:relative; top:-8px; float:left; '+vl+'; box-shadow:none;" onclick="wppaOvlShowPrev()" / >'+
+					'<img src="'+wppaImageDirectory+'next-'+wppaOvlTheme+'.gif" style="position:relative; top:-8px; float:right;'+vr+'; box-shadow:none;" onclick="wppaOvlShowNext()" / >'+
+					'<div id="wppa-overlay-txt" style="text-align:center; min-height:36px; '+ht+' overflow:hidden; box-shadow:none; width:'+(cw-80)+'px;" >';
+					if ( wppaOvlShowCounter ) html += (wppaOvlIdx+1)+'/'+wppaOvlUrls.length+'<br />';
+					html += wppaOvlTitle+'</div>';
 		jQuery('#wppa-overlay-txt-container').html(html);
+		wppaOvlIsSingle = false;
 	}
 	else {
-		jQuery('#wppa-overlay-txt-container').html('<br />'+wppaOvlTitle);
+		jQuery('#wppa-overlay-txt-container').html('<div id="wppa-overlay-txt" style="text-align:center; margin-left:45px;" >'+wppaOvlTitle+'</div>');
+		wppaOvlIsSingle = true;
 	}
 	jQuery('#wppa-overlay-txt-container').css('visibility', 'visible');
 	jQuery('#wppa-overlay-qt-txt').css({visibility: 'visible'});
@@ -1931,8 +2301,7 @@ function wppaOvlShow4() {
 		if ( window.onresize ) {
 			wppaOvlSizeHandler = window.onresize;
 		}
-		window.onresize = function () {return wppaOvlResize(10);}
-		
+		window.onresize = function () {return wppaOvlResize(10);}		
 		wppaOvlFirst = false;
 	}
 	if (wppaOvlTxtHeight == 'auto') wppaOvlResize(10);	// Resize to accomodate for var text height
@@ -1940,6 +2309,8 @@ function wppaOvlShow4() {
 }
 
 function wppaOvlShowPrev() {
+_wppaLog('wppaOvlShowPrev', 1);
+	if (wppaOvlIsSingle) return false;
 	if (wppaOvlIdx < 1) {
 		wppaOvlHide();	// There is no prev, quit
 		return false;
@@ -1948,6 +2319,8 @@ function wppaOvlShowPrev() {
 	return false;
 }
 function wppaOvlShowNext() {
+_wppaLog('wppaOvlShowNext', 1);
+	if (wppaOvlIsSingle) return false;
 	if (wppaOvlIdx >= (wppaOvlUrls.length-1)) {
 		wppaOvlHide();	// There is no next, quit
 		return false;
@@ -1956,69 +2329,114 @@ function wppaOvlShowNext() {
 	return false;
 }
 
-function wppaOvlSize(speed) {	
+function wppaOvlSize(speed) {
+_wppaLog('wppaOvlSize', 1);
 
 	// Wait for text complete
 	if (! document.getElementById('wppa-overlay-txt')) { setTimeout('wppaOvlSize('+speed+')', 10); return;}
 
-	var iw = window.innerWidth;
+	wppaFindWindowSize();
+
+	var iw = wppaWindowInnerWidth;
+	var ih = wppaWindowInnerHeight;	
 	var img = document.getElementById('wppa-overlay-img');
 	var cw = img.clientWidth;
-	var nw = img.naturalWidth;
-	var nh = img.naturalHeight;
-	var mh;
-	if (wppaOvlTxtHeight == 'auto') {
-		var tch = document.getElementById('wppa-overlay-txt').clientHeight;
-		if (tch == 0) tch = 36;
-		mh = window.innerHeight - tch - 52;
+	
+	var nw = img.naturalWidth; 
+	var nh = img.naturalHeight; 
+	
+	var fakt1;
+	var fakt2;
+	var fakt;
+	
+	// If the width is the limiting factor, adjust the height
+	if ( typeof(nw) == 'undefined' ) {	// ver 4 browser
+		nw = img.clientWidth;
+		nh = img.clientHeight;
+		fakt1 = (iw-100)/nw;
+		fakt2 = ih/nh;
+		if (fakt1<fakt2) fakt = fakt1;	// very landscape, width is the limit
+		else fakt = fakt2;				// Height is the limit
+		if ( true ) {					// Up or downsize
+			nw = parseInt(nw * fakt);
+			nh = parseInt(nh * fakt);
+		}
 	}
 	else {
-		mh = window.innerHeight - wppaOvlTxtHeight - 52;
+		fakt1 = (iw-100)/nw;
+		fakt2 = ih/nh;
+		if (fakt1<fakt2) fakt = fakt1;	// very landscape, width is the limit
+		else fakt = fakt2;				// Height is the limit
+		if ( fakt < 1.0 ) {				// Only downsize if needed
+			nw = parseInt(nw * fakt);
+			nh = parseInt(nh * fakt);
+		}
 	}
+
+	var mh;	// max image height
+	var tch = document.getElementById('wppa-overlay-txt').clientHeight;
+
+	if (wppaOvlTxtHeight == 'auto') {
+		if (tch == 0) tch = 36;
+		mh = ih - tch - 52;
+	}
+	else {
+		mh = ih - wppaOvlTxtHeight - 52;
+	}
+
 	var mw = parseInt(mh * nw / nh);
 	var pt = wppaOvlPadTop;
 	var lft = parseInt((iw-mw)/2);
-	
-	// Image too small?
-	if (nh < mh) {
+	var wid = mw;
+
+	// Image too small?	(never for ver 4 browsers, we do not know the natural dimensions
+	if (nh < mh ) {
 		pt = wppaOvlPadTop + (mh - nh)/2;
 		lft = parseInt((iw-nw)/2);
+		wid = nw;
 	}
 
+	var cwid = wid+32;
+
+	// Go to final size
 	if ( speed == 0 ) {
-		jQuery('#wppa-overlay-img').css({maxWidth: mw+'px', visibility: 'visible'});
-		jQuery('#wppa-overlay-ic').css({left: lft+'px', paddingTop: pt+'px'});
-		jQuery('#wppa-overlay-qt-txt').css({top: (pt-3)+'px'});
-		jQuery('#wppa-overlay-qt-img').css({top: pt+'px'});
+		jQuery('#wppa-overlay-img').css({width:wid, maxWidth: wid, visibility: 'visible'});
+		jQuery('#wppa-overlay-ic').css({width: cwid, left: lft, paddingTop: pt});
+		jQuery('#wppa-overlay-qt-txt').css({top: (pt-1)});
+		jQuery('#wppa-overlay-qt-img').css({top: pt});
 	}
 	else {
-		jQuery('#wppa-overlay-img').stop().animate({maxWidth: mw+'px'}, speed);
-		jQuery('#wppa-overlay-ic').stop().animate({left: lft+'px', paddingTop: pt+'px'}, speed);
-		jQuery('#wppa-overlay-qt-txt').stop().animate({top: (pt-1)+'px'}, speed);
-		jQuery('#wppa-overlay-qt-img').stop().animate({top: pt+'px'}, speed);
+		jQuery('#wppa-overlay-img').stop().animate({width:wid, maxWidth: wid}, speed);
+		jQuery('#wppa-overlay-ic').stop().animate({width: cwid, left: lft, paddingTop: pt}, speed);
+		jQuery('#wppa-overlay-qt-txt').stop().animate({top: (pt-1)}, speed);
+		jQuery('#wppa-overlay-qt-img').stop().animate({top: pt}, speed);
 	}
 	
 	// If resizing, also resize txt elements when sizing is complete
 	if ( document.getElementById('wppa-overlay-txt') ) {
 		// Hide during resize if sizing takes longer than 10 ms.
 		if (speed > 10) jQuery('#wppa-overlay-txt').css({visibility: 'hidden'});
-}		
-		setTimeout('wppaOvlSize2()', speed+20);
-//	}
+	}		
+	setTimeout('wppaOvlSize2()', speed+20);
 	return true;
 }
 function wppaOvlSize2() {
+_wppaLog('wppaOvlSize2', 1);
 	
 	var cw = document.getElementById('wppa-overlay-img').clientWidth;
-	
+
+	jQuery('#wppa-overlay-img').css({width: cw});	// Req'd for ver 4 browsers
+	jQuery('#wppa-overlay-ic').css({width: cw+32});	// ditto
 	jQuery('#wppa-overlay-txt').css({width:(cw-80)+'px', visibility: 'visible'});
 
 	return true;
 }
 
 function wppaOvlHide() {
+_wppaLog('wppaOvlHide', 1);
 	// Clear image container
 	jQuery('#wppa-overlay-ic').html('');
+	jQuery('#wppa-overlay-ic').css({paddingTop: 0});
 	// Remove background
 	jQuery('#wppa-overlay-bg').fadeOut(300);
 	// Re-instal posssible original kb handler
@@ -2038,7 +2456,7 @@ function wppaOvlOnclick(event) {
 			break;
 		case 'browse':
 			var x = event.screenX - window.screenX;
-			if (x < window.innerWidth/2) wppaOvlShowPrev();
+			if (x < wppaWindowInnerWidth/2) wppaOvlShowPrev();
 			else wppaOvlShowNext();
 			break;
 		default:
@@ -2049,9 +2467,7 @@ function wppaOvlOnclick(event) {
 }
 
 function wppaInitOverlay() {
-
-	if ( wppaLightBox != 'wppa' ) return;	// No, not this time
-	
+_wppaLog('wppaInitOverlay', 1);
 	var anchors=jQuery('a');
 	var anchor;
 	var i;
@@ -2096,10 +2512,42 @@ var wppaKbAction = function(e) {
 // Change to: <a href="javascript://" onclick="myproc(); wppaOvlResize()" >Show Details</a>
 // Isn't it simple?
 function wppaOvlResize() {
+_wppaLog('wppaOvlResize', 1);
 	// See if generic lightbox is on
-	if ( wppaLightBox != 'wppa' ) return;	// No, not this time.
+//	if ( wppaLightBox != 'wppa' ) return;	// No, not this time.
 	// Wait for completeion of text and do a size operation
 	setTimeout('wppaOvlSize(10)', 50);		// After resizing, the number of lines may have changed
 	setTimeout('wppaOvlSize(10)', 200);
 	setTimeout('wppaOvlSize(10)', 500);
+}
+
+function wppaAjaxMakeOrigName(mocc, id) {
+	
+	// Create the http request object
+	var xmlhttp = wppaGetXmlHttp();
+	var url = wppaAjaxUrl+'?action=wppa&wppa-action=makeorigname&photo-id='+id+'&from=fsname';
+
+	// Issue request Synchronously!!
+	xmlhttp.open("GET",url,false);
+	xmlhttp.send();
+	
+	if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+		var result = xmlhttp.responseText.split('||');
+		if (result[1] == '0') {	// Ok, no error
+			// Publish result
+			if ( wppaArtMonkyLink == 'file' ) window.open(result[2]);
+			if ( wppaArtMonkyLink == 'zip' ) document.location = result[2];
+			// Go
+			return true;
+		}
+		else {
+			// Show error
+			alert('Error: '+result[1]+'\n\n'+result[2]);
+			return false;
+		}
+	}
+	else {
+		alert('Comm error encountered');
+		return false;
+	}
 }
