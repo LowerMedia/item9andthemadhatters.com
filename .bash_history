@@ -111,3 +111,69 @@ git push remote origin
 git push
 git push master
 git push origin master
+ls
+git status
+git push
+ls
+cd .git
+ls
+git status
+git remote show origin
+nano .git/config
+nano .git/
+cd .git
+ls
+nano config
+cd ..
+ls
+git push -u origin master
+git push origin
+git clone git@github.com:LowerMedia/item9andthemadhatters.com.git
+ls
+git status
+cd item9andthemadhatters.com/
+ls
+git status
+git remote show origin
+ls
+cd .
+cd ..
+ls
+git rm -rf .git
+ls
+cd .git
+ls
+cd ..
+ls
+git rmdir -rf
+rm -rf .git
+ls
+cd .git
+git status
+git add .
+ls
+git status
+git push -u
+git status
+git commit -m 'adding site files'
+git push -u
+ls
+git status
+ls
+cd wp-content
+ls
+cd themes
+ls
+cd twentyeleven/
+ls
+nano functions.php
+git status
+cd ../..
+ls
+cd ..
+ls
+git add .
+git commit -m "adding to functions.php"
+git push -u master
+git push -u
+ls
