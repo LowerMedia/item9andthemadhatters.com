@@ -1,3 +1,7 @@
+body small center {
+display:none;
+}
+
 body {
     background-attachment: fixed !important;
     background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-iowa-city-band-rock-music.png") !important;
