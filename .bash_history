@@ -177,3 +177,25 @@ git commit -m "adding to functions.php"
 git push -u master
 git push -u
 ls
+cd wp-content/themes
+ls
+cd twentyeleven/
+ls
+git status
+cd ../../
+ls
+cd ../
+ls
+git status
+git add .
+git commit -m "adding new site files"
+git push -u
+ls
+cd wp-content/themes/twentyeleven/
+ls
+nano custom.css
+git status
+git add .
+git commit -m "removing marquee ad at bottom with css"
+git push -u
+ls
