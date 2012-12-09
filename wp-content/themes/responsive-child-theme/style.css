@@ -47,7 +47,13 @@ body.home div#content {
 	padding:2%;
 }
 
+body.home .col-620 {
+    width: 61.957%;
+}
 
+body.home h1 {
+	text-align: center;
+}
 
 
 /* =Media Print
