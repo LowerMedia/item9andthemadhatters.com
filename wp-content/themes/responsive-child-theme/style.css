@@ -51,8 +51,8 @@ body.home .col-620 {
     width: 61.957%;
 }
 
-body.home h1 {
-	text-align: center;
+h1.post-title {
+	display:none;
 }
 
 
