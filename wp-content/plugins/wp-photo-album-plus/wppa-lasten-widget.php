@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * display the last uploaded photos
-* Version 4.7.16
+* Version 4.8.6
 */
 
 class LasTenWidget extends WP_Widget {
@@ -33,10 +33,10 @@ class LasTenWidget extends WP_Widget {
 		$albumenum = $instance['albumenum'];
 		if ($album == '-99') $album = implode(' OR `album` = ', explode(',', $albumenum));
 		if ($album) {
-			$thumbs = $wpdb->get_results($wpdb->prepare( 'SELECT * FROM '.WPPA_PHOTOS.' WHERE album = '.$album.' ORDER BY timestamp DESC LIMIT '.$max ), 'ARRAY_A' );
+			$thumbs = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `".WPPA_PHOTOS."` WHERE `album` = %s ORDER BY `timestamp` DESC LIMIT " . $max, $album ), ARRAY_A );
 		}
 		else {
-			$thumbs = $wpdb->get_results($wpdb->prepare( 'SELECT * FROM '.WPPA_PHOTOS.' ORDER BY timestamp DESC LIMIT '.$max ), 'ARRAY_A' );
+			$thumbs = $wpdb->get_results( "SELECT * FROM `".WPPA_PHOTOS."` ORDER BY `timestamp` DESC LIMIT " . $max, ARRAY_A );
 		}
 		$widget_content = "\n".'<!-- WPPA+ LasTen Widget start -->';
 		$maxw = $wppa_opt['wppa_lasten_size'];
@@ -51,7 +51,7 @@ class LasTenWidget extends WP_Widget {
 				$no_album = !$album;
 				if ($no_album) $tit = __a('View the most recent uploaded photos', 'wppa_theme'); else $tit = esc_attr(wppa_qtrans(stripslashes($image['description'])));
 				$link       = wppa_get_imglnk_a('lasten', $image['id'], '', $tit, '', $no_album, $albumenum);
-				$file       = wppa_get_thumb_path_by_id($image['id']);
+				$file       = wppa_get_thumb_path($image['id']);
 				$imgstyle_a = wppa_get_imgstyle_a($file, $maxw, 'center', 'ltthumb');
 				$imgstyle   = $imgstyle_a['style'];
 				$width      = $imgstyle_a['width'];
@@ -72,7 +72,7 @@ class LasTenWidget extends WP_Widget {
 						$widget_content .= "\n\t".'</a>';
 					}
 					elseif ( $link['is_lightbox'] ) {
-						$title = wppa_get_lbtitle('thumb', $image);
+						$title = wppa_get_lbtitle('thumb', $image['id']);
 						$widget_content .= "\n\t".'<a href="'.$link['url'].'" rel="'.$wppa_opt['wppa_lightbox_name'].'[lasten-'.$album.']" title="'.$title.'" target="'.$link['target'].'" >';
 							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.wppa_zoom_in().'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.$cursor.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 						$widget_content .= "\n\t".'</a>';
@@ -151,7 +151,7 @@ class LasTenWidget extends WP_Widget {
 		</p>
 
 
-		<p><?php _e('You can set the behaviour of this widget in the <b>Photo Albums -> Settings</b> admin page.', 'wppa'); ?></p>
+		<p><?php _e('You can set the sizes in this widget in the <b>Photo Albums -> Settings</b> admin page.', 'wppa'); ?></p>
 <?php
     }
 

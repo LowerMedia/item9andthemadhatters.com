@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * display the top rated photos
-* Version 4.7.16
+* Version 4.8.6
 */
 
 class TopTenWidget extends WP_Widget {
@@ -31,10 +31,10 @@ class TopTenWidget extends WP_Widget {
 		$album = $instance['album'];
 		
 		if ($album) {
-			$thumbs = $wpdb->get_results($wpdb->prepare( 'SELECT * FROM '.WPPA_PHOTOS.' WHERE mean_rating > 0 AND album = %s ORDER BY '.$instance['sortby'].' DESC LIMIT '.$max, $album ), 'ARRAY_A' );
+			$thumbs = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `".WPPA_PHOTOS."` WHERE `album` = %s ORDER BY `" . $instance['sortby'] . "` DESC LIMIT " . $max, $album ), ARRAY_A );
 		}
 		else {
-			$thumbs = $wpdb->get_results($wpdb->prepare( 'SELECT * FROM '.WPPA_PHOTOS.' WHERE mean_rating > 0 ORDER BY '.$instance['sortby'].' DESC LIMIT '.$max ), 'ARRAY_A' );
+			$thumbs = $wpdb->get_results( "SELECT * FROM `".WPPA_PHOTOS."` ORDER BY `" . $instance['sortby'] . "` DESC LIMIT " . $max, ARRAY_A );
 		}
 		$widget_content = "\n".'<!-- WPPA+ TopTen Widget start -->';
 		$maxw = $wppa_opt['wppa_topten_size'];
@@ -49,7 +49,7 @@ class TopTenWidget extends WP_Widget {
 				$no_album = !$album;
 				if ($no_album) $tit = __a('View the top rated photos', 'wppa_theme'); else $tit = esc_attr(wppa_qtrans(stripslashes($image['description'])));
 				$link       = wppa_get_imglnk_a('topten', $image['id'], '', $tit, '', $no_album);
-				$file       = wppa_get_thumb_path_by_id($image['id']);
+				$file       = wppa_get_thumb_path($image['id']);
 				$imgstyle_a = wppa_get_imgstyle_a($file, $maxw, 'center', 'ttthumb');
 				$imgstyle   = $imgstyle_a['style'];
 				$width      = $imgstyle_a['width'];
@@ -70,7 +70,7 @@ class TopTenWidget extends WP_Widget {
 						$widget_content .= "\n\t".'</a>';
 					}
 					elseif ( $link['is_lightbox'] ) {
-						$title = wppa_get_lbtitle('thumb', $image);
+						$title = wppa_get_lbtitle('thumb', $image['id']);
 						$widget_content .= "\n\t".'<a href="'.$link['url'].'" rel="'.$wppa_opt['wppa_lightbox_name'].'[topten-'.$album.']" title="'.$title.'" target="'.$link['target'].'" >';
 							$widget_content .= "\n\t\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.wppa_zoom_in().'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.$cursor.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 						$widget_content .= "\n\t".'</a>';
@@ -82,13 +82,15 @@ class TopTenWidget extends WP_Widget {
 				else {
 					$widget_content .= "\n\t".'<img id="i-'.$image['id'].'-'.$wppa['master_occur'].'" title="'.$title.'" src="'.$imgurl.'" width="'.$width.'" height="'.$height.'" style="'.$imgstyle.'" '.$imgevents.' alt="'.esc_attr(wppa_qtrans($image['name'])).'">';
 				}
+			$widget_content .= "\n\t".'<span style="font-size:9px;">'.wppa_get_rating_by_id($image['id']);
+				if ( $wppa_opt['wppa_show_rating_count'] ) $widget_content .= ' ('.wppa_get_rating_count_by_id($image['id']).')';
+			$widget_content .= '</span>'."\n".'</div>';
+				
+				
 			}
 			else {	// No image
 				$widget_content .= __a('Photo not found.', 'wppa_theme');
 			}
-			$widget_content .= "\n\t".'<span style="font-size:9px;">'.wppa_get_rating_by_id($image['id']);
-				if ( $wppa_opt['wppa_show_rating_count'] ) $widget_content .= ' ('.wppa_get_rating_count_by_id($image['id']).')';
-			$widget_content .= '</span>'."\n".'</div>';
 		}	
 		else $widget_content .= 'There are no rated photos (yet).';
 		
@@ -135,7 +137,7 @@ class TopTenWidget extends WP_Widget {
 			</select>
 		</p>
 
-		<p><?php _e('You can set the behaviour of this widget in the <b>Photo Albums -> Settings</b> admin page.', 'wppa'); ?></p>
+		<p><?php _e('You can set the sizes in this widget in the <b>Photo Albums -> Settings</b> admin page.', 'wppa'); ?></p>
 <?php
     }
 

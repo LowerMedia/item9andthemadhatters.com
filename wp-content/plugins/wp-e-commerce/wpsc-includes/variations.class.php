@@ -27,6 +27,7 @@ class wpsc_variations {
 		global $wpdb;
 
 		$product_terms = wp_get_object_terms($product_id, 'wpsc-variation');
+
 		$this->variation_groups = array();
 		$this->first_variations = array();
 		$this->all_associated_variations = array();
@@ -44,7 +45,7 @@ class wpsc_variations {
 
 			array_unshift( $this->all_associated_variations[$variation_set], (object) array(
 				'term_id' => 0,
-				'name'    => __('-- Please Select --', 'wpsc'),
+				'name'    => __( '-- Please Select --', 'wpsc' ),
 			) );
 		}
 

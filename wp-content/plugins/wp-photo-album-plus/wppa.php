@@ -2,7 +2,7 @@
 /*
 Plugin Name: WP Photo Album Plus
 Description: Easily manage and display your photo albums and slideshows within your WordPress site.
-Version: 4.7.18
+Version: 4.8.6
 Author: J.N. Breetvelt a.k.a OpaJaap
 Author URI: http://wppa.opajaap.nl/
 Plugin URI: http://wordpress.org/extend/plugins/wp-photo-album-plus/
@@ -17,7 +17,7 @@ global $wpdb;
 /* when new options are added and when the wppa_setup() routine 
 /* must be called right after update for any other reason.
 */
-global $wppa_revno; $wppa_revno = '479';	
+global $wppa_revno; $wppa_revno = '486';	
 
 /* CONSTANTS
 /*
@@ -58,9 +58,12 @@ require_once 'wppa-gp-widget.php';
 require_once 'wppa-comment-widget.php';
 require_once 'wppa-thumbnail-widget.php';
 require_once 'wppa-lasten-widget.php';
+require_once 'wppa-album-widget.php';
+require_once 'wppa-qr-widget.php';
 
 /* COMMON FUNCTIONS */
 require_once 'wppa-common-functions.php';
+require_once 'wppa-utils.php';
 
 /* SET UP $wppa[], $wppa_opt[], URL and PATH constants and LANGUAGE */
 add_action('init', 'wppa_initialize_runtime', '100');
@@ -73,3 +76,33 @@ else require_once 'wppa-non-admin.php';
 require_once 'wppa-ajax.php';
 
 $wppa_loadtime += microtime(true);
+
+/* This is for the changelog text when an update is available */
+global $pagenow;
+if ( 'plugins.php' === $pagenow )
+{
+    // Changelog update message
+    $file   = basename( __FILE__ );
+    $folder = basename( dirname( __FILE__ ) );
+    $hook = "in_plugin_update_message-{$folder}/{$file}";
+    add_action( $hook, 'wppa_update_message_cb', 20, 2 ); // hook for function below
+}
+function wppa_update_message_cb( $plugin_data, $r )
+{
+    $output = '<span style="margin-left:10px;color:#FF0000;">Please Read the <a href="http://wppa.opajaap.nl/changelog/" target="_blank" >Changelog</a> Details Before Upgrading.</span>';
+   
+    return print $output;
+}
+
+/* This function will add "donate" link to main plugins page */
+function wppa_donate_link($links, $file) { 
+	if ( $file == plugin_basename(__FILE__) ) { 
+		$donate_link_usd = '<a target="_blank" title="Paypal" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=OpaJaap@OpaJaap.nl&item_name=WP-Photo-Album-Plus&item_number=Support-Open-Source&currency_code=USD&lc=US">Donate USD</a>'; 
+		$donate_link_eur = '<a target="_blank" title="Paypal" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=OpaJaap@OpaJaap.nl&item_name=WP-Photo-Album-Plus&item_number=Support-Open-Source&currency_code=EUR&lc=US">Donate EUR</a>';
+		$docs_link = '<a target="_blank" href="http://wppa.opajaap.nl/" title="Docs & Demos" >Documentation and examples</a>';
+		
+		$links[] = $donate_link_usd . ' | ' . $donate_link_eur . ' | ' . $docs_link;  
+	} 
+	return $links; 
+} add_filter('plugin_row_meta', 'wppa_donate_link', 10, 2);
+

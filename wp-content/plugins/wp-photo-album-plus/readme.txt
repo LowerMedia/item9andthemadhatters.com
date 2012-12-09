@@ -2,12 +2,12 @@
 Contributors: opajaap
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=OpaJaap@OpaJaap.nl&item_name=WP-Photo-Album-Plus&item_number=Support-Open-Source&currency_code=USD&lc=US
 Tags: photo, album, photoalbum, gallery, slideshow, sidebar widget, photowidget, photoblog, widget, qtranslate, cubepoints, multisite, network, lightbox, comment, watermark, iptc, exif, responsive, mobile
-Version: 4.7.18
+Version: 4.8.6
 Stable tag: trunk
 Author: J.N. Breetvelt
 Author URI: http://www.opajaap.nl/
 Requires at least: 3.0
-Tested up to: 3.4.2
+Tested up to: 3.5
 
 This plugin is designed to easily manage and display your photo albums and slideshows in a single as well as in a network WordPress site.
 
@@ -33,13 +33,14 @@ This plugin is designed to easily manage and display your photo albums and slide
 * Apart from the full-size slideshows you can add a Sidebar Widget that displays a mini slideshow.
 * There is a widget to display a number of most recently uploaded photos. It can be configured systemwide and/or on an album basis.
 * There is a General Purpose widget that is a text widget wherein you can use wppa+ script commands.
+* There is an album widget that displays thumbnail images that link to album contents.
+* There is a QR code widget that will be updated when the content of the page changes.
 * Almost all appearance settings can be done in the settings admin page. No php, html or css knowledge is required to customize the appearence of the photo display.
 * International language support for static text: Currently included foreign languages files: Dutch, Japanese, French(outdated), Spanish, German.
 * International language support for dynamic text: Album and photo names and descriptions fully support the qTranslate multilanguage rules.
 * Suports lightbox 3.
 * You can add watermarks to the photos.
 * The plugin supports IPTC and EXIF data.
-* Supports addThis: while browsing fullsize images the share url will be updated.
 * Supports WP supercache. The cache will be cleared whenever required for wppa+.
 * Supports Cube Points. You can assign points to comments and votes.
 
@@ -67,7 +68,7 @@ However, check these requirements in case of problems with new installations wit
 * The server should have at least 32MB of memory, 64MB or more is recommended.
 
 = Upgrade notice =
-This version is: Major rev# 4, Minor rev# 7, Fix rev# 17, Hotfix rev# 000.
+This version is: Major rev# 4, Minor rev# 8, Fix rev# 3, Hotfix rev# 000.
 If you are upgrading from a previous Major or Minor version, note that:
 * If you modified wppa_theme.php and/or wppa_style.css, you will have to use the newly supplied versions. The previous versions are NOT compatible.
 * If you set the userlevel to anything else than 'administrator' you may have to set it again. Note that changing the userlevel can be done by the administrator only!
@@ -89,8 +90,13 @@ See Table I-A1 and Table I-B1,2 of the Photo Albums -> Settings admin page.
 
 = Which other plugins do you recommand to use with WPPA+, and which not? =
 
-* Recommanded plugins: qTranslate, WP Super Cache, AddThis, Cube Points.
+* Recommanded plugins: qTranslate, WP Super Cache, Cube Points.
 * Plugins that break up WPPA+: My Live Signature.
+* Google Analytics for WordPress will break the slideshow in most cases when *Track outbound clicks & downloads:* has been checked in its configuration.
+
+= Which themes have problems with wppa+ ? =
+
+* Photocrati has a problem with the wppa+ embedded lightbox when using page templates with sidebar.
 
 = Are there special requirements for responsive (mobile) themes? =
 
@@ -155,6 +161,120 @@ Oh, just Google on 'picture resizer' and you will find a bunch of free programs 
 == Changelog ==
 
 See for additional information: http://wppa.opajaap.nl/?page_id=1459
+
+= 4.8.6 =
+
+= New Features = 
+
+* Grant an album (Table IX-B6,7). If checked: for any user who has upload rights a default album will be created 
+if there is not yet an album with him as owner as soon as he logs in. (Requires Table VII-B1: Owners only).
+* Coversize is height (Table I-D3.1) works only when Coverphoto pos is top or bottom (Table IV-D3). 
+This makes it easyer to make the covers equal in height.
+* Share a single image (Table II-B21.99). The sharelink points to a page with a *single image like a slideshow* rather than *the photo in the slideshow*.
+
+= Other Changes =
+
+* Changes made to be compatible with WP 3.5: Fix in TinyMCE shortcode generator and fixes to warning prepare() arg 2.
+* To prevent disappointments, the settings that have no help text do no longer show a questionmark button.
+
+= 4.8.5 =
+
+= Bug Fixes =
+
+* Thumbnail popups were vertically misplaced when Table II-C8 (display album description on thumbnail area) was set to *top*. Fixed.
+* The lightbox background was not large enough for an ipad in portrait position. Fixed.
+* The photo of the day, when set to *day of month is order#* will now display the correct image and change on 24.00 based on the blogs timezone set in wp *Settings -> General*.
+
+= New features =
+
+* You can switch off the display of the "Comment Added/Edited" alert box in Table IV-F6.
+* The album cover photo can now link to lightbox, giving sets of the album contents.
+* The Album widget thumbnails can now link to lightbox, giving sets of the respective album contents.
+
+= Other Changes =
+
+* The date/time of upload on the album admin -> edit -> manage photos page is now based on the blogs timezone set in wp *Settings -> General*.
+* The Twitter Intent Tweet now displays the working link to the image you wanted to share.
+* The Hyves Tip now shows spaces where spaces are expected in place of plus signs.
+* The links form standard thumbnails to slideshow are Ajaxified for normal albums 
+(not for special photo selections like topten, lasten or search results) where possible (same page/post, no new tab, no pso).
+
+= 4.8.4 =
+
+= Bug Fixes =
+
+* Fix for special chars in photo names.
+
+= New Features =
+
+* The photo of the day display method selction *Change every* has been expanded with *day of month is order#*
+
+= Other changes =
+
+* Pretty links are automaticly disabled when the permalink structure is default or when the super global $_ENV["SCRIPT_URI"] is not set and will no longer result in not found errors.
+
+= 4.8.3 =
+
+= Bug Fixes =
+
+* Removed spurious html tags from the description used for social media sharing.
+* Fix for special chars in album names.
+
+= New Features = 
+
+* You can set the behaviour of the filmstrip thumbnails to go to the indicated slide on hovering. Table IV-B13.
+
+= Other Changes =
+
+* If a file wppa.min.js exists, it will be loaded in place of wppa.js. A minified wppa.min.js is supplied and saves approx. 25 kb data load.
+* The Share box can be switched on for slideshows in widgets, not being slideonly slideshows like the slideshow widget.
+* The size of the social media icons in the Share box is selectable: 16 or 32 pixels. In widgets it is 16 px always.
+
+= 4.8.2 =
+
+= New Features =
+
+* New box in the slideshow: Share box. Contains links to social media that work. 
+Shares the url showing the photo, name and description of the photo where the box is displayed under.
+You can configure the box in **Table II-B21**, and move it upwards in Table IX-E.
+* The creation and interpretation of 'Pretty Links' is supported now. Enable in Table IV-A3. **Table IV-A2 must be unchecked for this setting to work properly!**
+
+= Other Changes =
+
+* Discontinued support of AddThis. addthis.update() does not work properly for url and title, and does not exist for image and description. 
+Also the documentation of addthis.update() is no longer findable in the addthis api documentation. The use of addThis is no longer encouraged.
+The dynamic updates from wppa+ have been removed.
+* Removed diagnostics and some code that is no longer required.
+
+= 4.8.1 =
+
+= Bug Fixes =
+
+* Due to a reorganisation, the link selections were mixed up in Table VI. Fixed.
+
+= 4.8.0 =
+
+= New Features =
+
+* There is a new widget: **Thumbnail Albums** widget. It shows album cover image thumbnails that link to 
+either the content of the album (sub-albums and thumbnails) or to a slidshow of the content photos.
+* There is a new widget: **QR Widget**. It shows a qr code that will be updated at wppa+ Ajax operations and slideshow browsing and running.
+* The qrcode can alternatively be displayed in the photo description box in the slideshow. All QR code settings are in Table IX-G.
+* You can now have the album description at the top or at the bottom of the thumnail area display. (Table II-C8).
+* You can switch off the automatic opening of the comment box when the slideshow does not run. (Table IV-B12).
+
+= Other Changes =
+
+* Table VI has been reorganized and sub-devided into separate sections.
+* wppa-theme.php and wppa-style.css have been changed. If you have them, check your optional copies in your theme dir.
+
+= 4.7.19 =
+
+= Other Changes =
+
+* For users who do not like the collapsable album table: You can now switch to the 'old style' flat table, back and forth.
+* A link to the manage photo's page has been added in the comment moderation email.
+* Pages with new style shortcode can now also be selected as target page in the comment admin.
 
 = 4.7.18 =
 

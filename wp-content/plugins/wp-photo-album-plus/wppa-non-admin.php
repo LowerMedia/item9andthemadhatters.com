@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains all the non admin stuff
-* Version 4.7.14
+* Version 4.8.6
 *
 */
 
@@ -38,13 +38,14 @@ global $wppa_opt;
 	if ( isset($_GET['wppa-album']) ) {
 		if ( $wppa_opt['wppa_meta_page'] ) {
 			$album = $_GET['wppa-album'];
-			$photos = $wpdb->get_results($wpdb->prepare( "SELECT id, name FROM `".WPPA_PHOTOS."` WHERE `album` = %s AND `status` = %s ", $album, 'featured' ), 'ARRAY_A');
+			$photos = $wpdb->get_results($wpdb->prepare( "SELECT id, name FROM `".WPPA_PHOTOS."` WHERE `album` = %s AND `status` = 'featured'", $album ), ARRAY_A);
 			if ( $photos ) {
 				echo("\n<!-- WPPA+ BEGIN Featured photos on this page -->");
 				foreach ( $photos as $photo ) {
 					$id = $photo['id'];
 					$name = esc_attr(__($photo['name']));
-					$content = wppa_get_permalink().'wppa-photo='.$photo['id'].'&wppa-occur=1';
+					$content = wppa_get_permalink().'wppa-photo='.$photo['id'].'&amp;wppa-occur=1';
+					$content = wppa_convert_to_pretty($content);
 					echo("\n<meta name=\"".$name."\" content=\"".$content."\" >");
 				}
 				echo("\n<!-- WPPA+ END Featured photos on this page -->\n");
@@ -53,7 +54,7 @@ global $wppa_opt;
 	}
 	// No album, give the plain photo links of all featured photos
 	elseif ( $wppa_opt['wppa_meta_all'] ) {
-		$photos = $wpdb->get_results($wpdb->prepare( "SELECT id, name, ext FROM `".WPPA_PHOTOS."` WHERE `status` = %s ",'featured' ), 'ARRAY_A');
+		$photos = $wpdb->get_results( "SELECT `id`, `name`, `ext` FROM `".WPPA_PHOTOS."` WHERE `status` = 'featured'", ARRAY_A);
 		if ( $photos ) {
 			echo("\n<!-- WPPA+ BEGIN Featured photos on this site -->");
 			foreach ( $photos as $photo ) {
@@ -66,13 +67,33 @@ global $wppa_opt;
 			echo("\n<!-- WPPA+ END Featured photos on this site -->\n");
 		}
 	}
+	
+	// Share thumbnail, I do not believe in this, but.. you never know, maybe it works somewhere
+	if ( isset($_GET['wppa-photo']) ) {
+		$id = $_GET['wppa-photo'];
+		if ( is_numeric($id) ) {
+			$photo = $wpdb->get_row($wpdb->prepare( "SELECT * FROM `".WPPA_PHOTOS."` WHERE `id` = %s ", $id ), ARRAY_A);
+			if ( $photo ) {
+				$imgurl = WPPA_UPLOAD_URL.'/thumbs/'.$id.'.'.$photo['ext'];
+				echo ("\n<!-- WPPA+ Share thumbnail data -->\n");
+				echo ("\n".'<link rel="image_src" href="'.$imgurl.'" />');
+				echo ("\n".'<meta property="og:image" content="'.$imgurl.'" />');
+				echo ("\n<!-- WPPA+ End Share thumbnail data -->\n");
+			}
+		}
+	}
 }
 
 /* LOAD SLIDESHOW, THEME, AJAX and LIGHTBOX js, all in one file nowadays */
 add_action('init', 'wppa_add_javascripts');
 	
 function wppa_add_javascripts() {
-	wp_enqueue_script('wppa', WPPA_URL.'/wppa.js', array('jquery'));
+	if ( is_file(WPPA_PATH.'/wppa.min.js') ) {
+		wp_enqueue_script('wppa', WPPA_URL.'/wppa.min.js', array('jquery'));
+	}
+	else {
+		wp_enqueue_script('wppa', WPPA_URL.'/wppa.js', array('jquery'));
+	}
 }
 	
 /* LOAD WPPA+ THEME */
@@ -95,7 +116,7 @@ global $wppa_opt;
 	if ($wppa_opt['wppa_lightbox_name'] == 'wppa') {
 		echo("\n<!-- start WPPA+ Footer data -->\n");
 		echo('
-			<div id="wppa-overlay-bg" style="text-align:center; display:none; position:fixed; top:0; left:0; z-index:100090; width:100%; height:500px; background-color:black;" onclick="wppaOvlOnclick(event)" ></div>
+			<div id="wppa-overlay-bg" style="text-align:center; display:none; position:fixed; top:0; left:0; z-index:100090; width:100%; height:2048px; background-color:black;" onclick="wppaOvlOnclick(event)" ></div>
 			<div id="wppa-overlay-ic" style="position:fixed; top:0; padding-top:10px; z-index:100095; opacity:1; box-shadow:none;" '.
 			' ontouchstart="wppaTouchStart(event, \'wppa-overlay-ic\', -1);"  ontouchend="wppaTouchEnd(event);" ontouchmove="wppaTouchMove(event);" ontouchcancel="wppaTouchCancel(event);" '.
 			'></div>
@@ -139,6 +160,22 @@ global $wppa_opt;
 	}
 }
 
+
+/* CHECK REDIRECTION */
+add_action('init', 'wppa_redirect');
+
+function wppa_redirect() {
+	if ( ! isset($_ENV["SCRIPT_URI"]) ) return;
+	$uri = $_ENV["SCRIPT_URI"];
+	$wppapos = stripos($uri, '/wppaspec/');
+	if ( $wppapos && get_option('permalink_structure') && get_option('wppa_use_pretty_links') == 'yes' ) {
+		$newuri = wppa_convert_from_pretty($uri);
+		if ( $newuri == $uri ) return;
+		wp_redirect($newuri);
+		exit;
+	}
+}
+
 /* LOAD JS VARS AND ENABLE RENDERING */
 add_action('wp_head', 'wppa_kickoff', '100');
 
@@ -157,17 +194,12 @@ global $wppa_locale;
 			echo("\t"."if (typeof(_wppaSlides) == 'undefined') alert('There is a problem with your theme. The file wppa.js is not loaded when it is expected (Errloc = wppa_kickoff).');");
 			echo("\t"."if (typeof(jQuery) == 'undefined') alert('There is a problem with your theme. The jQuery library is not loaded when it is expected (Errloc = wppa_kickoff).');");
 		}
-		/* This goes into wppa_theme.js */ 
+		/* This goes into wppa.js */ 
 		echo("\t".'wppaBackgroundColorImage = "'.$wppa_opt['wppa_bgcolor_img'].'";'."\n");
-		echo("\t".'wppaPopupLinkType = "'.$wppa_opt['wppa_thumb_linktype'].'";'."\n"); 
-		//echo("\t".'wppa_popup_size = "'.$wppa_opt['wppa_popupsize'].'";'."\n");
-
-		/* This goes into wppa_slideshow.js */
+		echo("\t".'wppaPopupLinkType = "'.$wppa_opt['wppa_thumb_linktype'].'";'."\n");
 		if ($wppa_opt['wppa_animation_type']) echo("\t".'wppaAnimationType = "'.$wppa_opt['wppa_animation_type'].'";'."\n");
 		echo("\t".'wppaAnimationSpeed = '.$wppa_opt['wppa_animation_speed'].';'."\n");
 		echo("\t".'wppaImageDirectory = "'.wppa_get_imgdir().'";'."\n");
-//		if ($wppa['auto_colwidth']) echo("\t".'wppaAutoColumnWidth = true;'."\n");
-//		else echo("\t".'wppaAutoCoumnWidth = false;'."\n");
 		echo("\t".'wppaThumbnailAreaDelta = '.wppa_get_thumbnail_area_delta().';'."\n");
 		echo("\t".'wppaTextFrameDelta = '.wppa_get_textframe_delta().';'."\n");
 		echo("\t".'wppaBoxDelta = '.wppa_get_box_delta().';'."\n");
@@ -193,7 +225,6 @@ global $wppa_locale;
 		echo("\t".'wppaPleaseEmail = "'.__a('Please enter a valid email address', 'wppa_theme').'";'."\n");
 		echo("\t".'wppaPleaseComment = "'.__a('Please enter a comment', 'wppa_theme').'";'."\n");
 		if ( $wppa_opt['wppa_hide_when_empty'] ) echo("\t".'wppaHideWhenEmpty = true;'."\n");
-		
 		echo("\t".'wppaBGcolorNumbar = "'.$wppa_opt['wppa_bgcolor_numbar'].'";'."\n");
 		echo("\t".'wppaBcolorNumbar = "'.$wppa_opt['wppa_bcolor_numbar'].'";'."\n");
 		echo("\t".'wppaBGcolorNumbarActive = "'.$wppa_opt['wppa_bgcolor_numbar_active'].'";'."\n");
@@ -206,7 +237,6 @@ global $wppa_locale;
 		echo("\t".'wppaFontSizeNumbarActive = "'.$wppa_opt['wppa_fontsize_numbar_active'].'px";'."\n");
 		echo("\t".'wppaFontColorNumbarActive = "'.$wppa_opt['wppa_fontcolor_numbar_active'].'";'."\n");
 		echo("\t".'wppaFontWeightNumbarActive = "'.$wppa_opt['wppa_fontweight_numbar_active'].'";'."\n");
-		
 		echo("\t".'wppaNumbarMax = "'.$wppa_opt['wppa_numbar_max'].'";'."\n");
 		if ($wppa_locale) echo("\t".'wppaLocale = "'.$wppa_locale.'";'."\n");
 		echo("\t".'wppaAjaxUrl = "'.admin_url('admin-ajax.php').'";'."\n");
@@ -251,7 +281,9 @@ global $wppa_locale;
 		else ("\t".'wppaThumbSpaceAuto = false;'."\n");
 		echo ("\t".'wppaMagnifierCursor = "'.$wppa_opt['wppa_magnifier'].'";'."\n");
 		echo ("\t".'wppaArtMonkyLink = "'.$wppa_opt['wppa_art_monkey_link'].'";'."\n");
-		echo ("\t".'wppaShare = "'.$wppa_opt['wppa_sharetype'].'";'."\n");
+		if ( $wppa_opt['wppa_auto_open_comments'] ) echo ("\t".'wppaAutoOpenComments = true;'."\n");
+		else echo ("\t".'wppaAutoOpenComments = false;'."\n");
+		
 
 	echo("/* ]]> */\n");
 	echo("</script>\n");

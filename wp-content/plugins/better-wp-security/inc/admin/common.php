@@ -62,6 +62,30 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 			return true;
 
 		}
+
+		/**
+		 * Determine if one-click protection has been activated
+		 *
+		 * @return bool success or failure
+		 *
+		 **/
+		function checkoneclick() {
+
+			global $bwpsoptions, $bwpsmemlimit;
+			
+			if ( $bwpsoptions['id_fileenabled'] == 0 &&  $bwpsmemlimit >= 128 ) {
+				$idfilecheck = 0;
+			} else {
+				$idfilecheck = 1;
+			}
+			
+			if ( $bwpsoptions['ll_enabled'] == 1 && $bwpsoptions['id_enabled'] == 1 && $bwpsoptions['st_generator'] == 1 && $bwpsoptions['st_manifest'] == 1 && $bwpsoptions['st_themenot'] == 1 && $bwpsoptions['st_pluginnot'] == 1 && $bwpsoptions['st_corenot'] == 1 && $bwpsoptions['st_enablepassword'] == 1 && $bwpsoptions['st_loginerror'] == 1 && $idfilecheck == 1 ) {
+				return true;
+			} else {
+				return false;
+			}
+
+		}
 		
 		/**
 		 * Deletes BWPS options from .htaccess
@@ -170,7 +194,7 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 							
 				foreach ( $lines as $line ) { //for each line in the file
 											
-					if ( ! strstr( $line, 'DISALLOW_FILE_EDIT' ) && ! strstr( $line, 'FORCE_SSL_LOGIN' ) && ! strstr( $line, 'FORCE_SSL_ADMIN' ) ) {
+					if ( ! strstr( $line, 'BWPS_FILECHECK' ) && ! strstr( $line, 'BWPS_AWAY_MODE' ) && ! strstr( $line, 'DISALLOW_FILE_EDIT' ) && ! strstr( $line, 'FORCE_SSL_LOGIN' ) && ! strstr( $line, 'FORCE_SSL_ADMIN' ) ) {
 						
 						fwrite( $f, trim( $line ) . PHP_EOL );
 						
@@ -442,16 +466,16 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 				
 						foreach ( $agents as $agent ) {
 							
-							$rules .= "RewriteCond %{HTTP_USER_AGENT} ^" . trim( $agent ) . "$";
+							$rules .= "RewriteCond %{HTTP_USER_AGENT} ^" . trim( $agent );
 							
 							if ( $count < sizeof( $agents ) ) {
 							
-								$rules .= " [OR]" . PHP_EOL;
+								$rules .= " [NC,OR]" . PHP_EOL;
 								$count++;
 							
 							} else {
 							
-								$rules .= PHP_EOL;
+								$rules .= " [NC]" . PHP_EOL;
 							
 							}
 							
@@ -573,6 +597,7 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 						"RewriteCond %{QUERY_STRING} !^loggedout=true" . PHP_EOL .
 						"RewriteCond %{QUERY_STRING} !^action=rp" . PHP_EOL .
 						"RewriteCond %{HTTP_COOKIE} !^.*wordpress_logged_in_.*$" . PHP_EOL .
+						"RewriteCond %{HTTP_REFERER} !^http://maps\.googleapis\.com(.*)$" . PHP_EOL .
 						"RewriteRule ^(.*)$ - [F,L]" . PHP_EOL . PHP_EOL;
 				
 				} else {
@@ -735,29 +760,41 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 			
 			@ini_set( 'auto_detect_line_endings', true );
 			
-			if ( $bwpsoptions['st_fileedit'] == 1 || $bwpsoptions['ssl_forcelogin'] == 1 || $bwpsoptions['ssl_forceadmin'] == 1 ) {
+			if ( $bwpsoptions['id_fileenabled'] == 1 || $bwpsoptions['am_enabled'] == 1 || $bwpsoptions['st_fileedit'] == 1 || $bwpsoptions['ssl_forcelogin'] == 1 || $bwpsoptions['ssl_forceadmin'] == 1 ) {
 			
-			$rules = "//BEGIN Better WP Security" . PHP_EOL;
-			
-			if ( $bwpsoptions['st_fileedit'] == 1 ) {
-			
-				$rules .= "define('DISALLOW_FILE_EDIT', true);" . PHP_EOL;
-			
-			}
-			
-			if ( $bwpsoptions['ssl_forcelogin'] == 1 ) {
-			
-				$rules .= "define('FORCE_SSL_LOGIN', true);" . PHP_EOL;
-			
-			}
-			
-			if ( $bwpsoptions['ssl_forceadmin'] == 1 ) {
-			
-				$rules .= "define('FORCE_SSL_ADMIN', true);" . PHP_EOL;
-			
-			}
-			
-			$rules .= "//END Better WP Security" . PHP_EOL;
+				$rules = "//BEGIN Better WP Security" . PHP_EOL;
+				
+				if ( $bwpsoptions['st_fileedit'] == 1 ) {
+				
+					$rules .= "define( 'DISALLOW_FILE_EDIT', true );" . PHP_EOL;
+				
+				}
+				
+				if ( $bwpsoptions['ssl_forcelogin'] == 1 ) {
+				
+					$rules .= "define( 'FORCE_SSL_LOGIN', true );" . PHP_EOL;
+				
+				}
+				
+				if ( $bwpsoptions['ssl_forceadmin'] == 1 ) {
+				
+					$rules .= "define( 'FORCE_SSL_ADMIN', true );" . PHP_EOL;
+				
+				}
+
+				if ( $bwpsoptions['am_enabled'] == 1 ) {
+				
+					$rules .= "define( 'BWPS_AWAY_MODE', true );" . PHP_EOL;
+				
+				}
+
+				if ( $bwpsoptions['id_fileenabled'] == 1 ) {
+				
+					$rules .= "define( 'BWPS_FILECHECK', true );" . PHP_EOL;
+				
+				}
+				
+				$rules .= "//END Better WP Security" . PHP_EOL;
 			
 			} else {
 			
@@ -976,20 +1013,32 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 			
 			if ( $bwpsoptions['st_fileedit'] == 1 ) {
 			
-				$lines .= "define('DISALLOW_FILE_EDIT', true);" . PHP_EOL . PHP_EOL;
+				$lines .= "define( 'DISALLOW_FILE_EDIT', true );" . PHP_EOL . PHP_EOL;
 			
 			}
 			
 			if ( $bwpsoptions['ssl_forcelogin'] == 1 ) {
 			
-				$lines .= "define('FORCE_SSL_LOGIN', true);" . PHP_EOL;
+				$lines .= "define( 'FORCE_SSL_LOGIN', true );" . PHP_EOL;
 			
 			}
 			
 			if ( $bwpsoptions['ssl_forceadmin'] == 1 ) {
 			
-				$lines .= "define('FORCE_SSL_ADMIN', true);" . PHP_EOL . PHP_EOL;
+				$lines .= "define( 'FORCE_SSL_ADMIN', true );" . PHP_EOL . PHP_EOL;
 			
+			}
+
+			if ( $bwpsoptions['am_enabled'] == 1 ) {
+			
+				$lines .= "define( 'BWPS_AWAY_MODE', true );" . PHP_EOL;
+			
+			}
+
+			if ( $bwpsoptions['id_fileenabled'] == 1 ) {
+				
+				$lines .= "define( 'BWPS_FILECHECK', true );" . PHP_EOL;
+				
 			}
 			
 			if ( ! $f = @fopen( $configfile, 'w+' ) ) {

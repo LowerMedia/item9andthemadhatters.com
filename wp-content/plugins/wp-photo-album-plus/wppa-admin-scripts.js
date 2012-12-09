@@ -1,7 +1,7 @@
 /* admin-scripts.js */
 /* Package: wp-photo-album-plus
 /*
-/* Version 4.7.18
+/* Version 4.8.5
 /* Various js routines used in admin pages		
 */
 
@@ -43,6 +43,7 @@ function wppaInitSettings() {
 	wppaCheckMphotoLink();
 	wppaCheckSphotoLink();
 	wppaCheckSlideOnlyLink();
+	wppaCheckAlbumWidgetLink();
 	wppaCheckSlideLink();
 	wppaCheckCoverImg();
 	wppaCheckPotdLink();
@@ -64,7 +65,9 @@ function wppaInitSettings() {
 	wppaCheckLinkPageErr('comment_widget');
 	wppaCheckLinkPageErr('thumbnail_widget');
 	wppaCheckLinkPageErr('lasten_widget');
+	wppaCheckLinkPageErr('album_widget');
 	wppaCheckSplitNamedesc();
+	wppaCheckShares();
 	
 	var tab=new Array('I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII');
 	var sub=new Array('A','B','C','D','E','F','G','H','I','J');
@@ -326,6 +329,12 @@ function wppaCheckAjax() {
 	}
 }
 
+function wppaCheckShares() {
+	var Sh = document.getElementById('wppa_share_on').checked || document.getElementById('wppa_share_on_widget').checked;
+	if (Sh) jQuery('.wppa_share').css('display', '');
+	else jQuery('.wppa_share').css('display', 'none');
+}
+
 function wppaCheckCustom() {
 	var Cm = document.getElementById('wppa_custom_on').checked;
 	if (Cm) {
@@ -444,6 +453,22 @@ function wppaCheckSlideOnlyLink() {
 	}
 	else {
 		jQuery('.wppa_solb').css('visibility', 'visible');
+	}
+}
+
+function wppaCheckAlbumWidgetLink() {
+	var lvalue = document.getElementById('wppa_album_widget_linktype').value;
+	if (lvalue == 'lightbox') {
+		jQuery('.wppa_awlp').css('visibility', 'hidden');
+	}
+	else {
+		jQuery('.wppa_awlp').css('visibility', 'visible');
+	}
+	if (lvalue == 'lightbox') {
+		jQuery('.wppa_awlb').css('visibility', 'hidden');
+	}
+	else {
+		jQuery('.wppa_awlb').css('visibility', 'visible');
 	}
 }
 
@@ -902,15 +927,17 @@ function wppaAjaxUpdateOptionCheckBox(slug, elem) {
 				switch (ArrValues[1]) {
 					case '0':	// No error
 						document.getElementById('img_'+slug).src = wppaImageDirectory+'tick.png';
+						document.getElementById('img_'+slug).title = ArrValues[2];
 						break;
 					default:
 						document.getElementById('img_'+slug).src = wppaImageDirectory+'cross.png';
+						document.getElementById('img_'+slug).title = 'Error #'+ArrValues[1]+', message: '+ArrValues[2]+', status: '+xmlhttp.status;
 					}
-				document.getElementById('img_'+slug).title = ArrValues[2];
+				
 			}
 			else {
 				document.getElementById('img_'+slug).src = wppaImageDirectory+'cross.png';
-				document.getElementById('img_'+slug).title = 'Communication error';
+				document.getElementById('img_'+slug).title = 'Communication error, status = '+xmlhttp.status;
 			}
 			wppaCheckInconsistencies();
 		}
@@ -1045,7 +1072,7 @@ function wppaCheckLinkPageErr(slug) {
 	var type = document.getElementById('wppa_'+slug+'_linktype').value;
 	var page = document.getElementById('wppa_'+slug+'_linkpage').value;
 	
-	if ( page == '0' && ( type == 'photo' || type == 'single' || type == 'album' )) {
+	if ( page == '0' && ( type == 'photo' || type == 'single' || type == 'album' || type == 'content' || type == 'slide' )) {
 		jQuery('#'+slug+'-err').css({display:''});
 	}
 	else {

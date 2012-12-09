@@ -2,7 +2,7 @@
 //
 // conatins slideshow, theme, ajax and lightbox code
 //
-// Version 4.7.18
+// Version 4.8.5
 
 // Part 1: Slideshow
 //
@@ -90,7 +90,7 @@ var wppaThumbSpaceAuto = false;
 var wppaMinThumbSpace = 4;
 var wppaMagnifierCursor = '';
 var wppaArtMonkyLink = 'none';
-var wppaShare = '';
+var wppaAutoOpenComments = false;
 
 // 'Internal' variables (private)
 var _wppaId = new Array();
@@ -126,9 +126,10 @@ var _wppaDidGoto = new Array();
 var wppaTopMoc = 0;
 var wppaColWidth = new Array();
 var _wppaShareUrl = new Array();
+var _wppaShareHtml = new Array();
+var _wppaFilmNoMove = new Array();
 
 jQuery(document).ready(function(){
-	_wppaLog('ready', 1);
 	
 	// Autocol?
 	for (mocc = 1; mocc <= wppaTopMoc; mocc++) {
@@ -139,13 +140,14 @@ jQuery(document).ready(function(){
 	}
 	_wppaTextDelay = wppaAnimationSpeed;
 	if (wppaFadeInAfterFadeOut) _wppaTextDelay *= 2;
+	
 });
 
 // First the external entrypoints that may be called directly from HTML
 // These functions check the validity and store the users request to be executed later if busy and if applicable.
 
 // This is an entrypoint to load the slide data
-function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, photoid, avgrat, myrat, rateurl, linkurl, linktitle, linktarget, iwtimeout, commenthtml, iptchtml, exifhtml, lbtitle, shareurl) {
+function wppaStoreSlideInfo(mocc, id, url, size, width, height, name, desc, photoid, avgrat, myrat, rateurl, linkurl, linktitle, linktarget, iwtimeout, commenthtml, iptchtml, exifhtml, lbtitle, shareurl, smhtml) {
 var cursor;
 	if ( ! _wppaSlides[mocc] ) {
 		_wppaSlides[mocc] = new Array();
@@ -176,6 +178,8 @@ var cursor;
 		_wppaDidGoto[mocc] = false;
 		wppaSlidePause[mocc] = false;
 		_wppaShareUrl[mocc] = new Array();
+		_wppaShareHtml[mocc] = new Array();
+		_wppaFilmNoMove[mocc] = false;
 	}
 	
 	// Cursor
@@ -211,6 +215,7 @@ var cursor;
 	_wppaUrl[mocc][id] = url;
 	_wppaLbTitle[mocc][id] = lbtitle;
 	_wppaShareUrl[mocc][id] = shareurl;
+	_wppaShareHtml[mocc][id] = smhtml;
 }
 
 function wppaSpeed(mocc, faster) {
@@ -301,6 +306,14 @@ function wppaGoto(mocc, idx) {
 	}
 }
 
+function wppaGotoFilmNoMove(mocc, idx) {
+	_wppaDidGoto[mocc] = true;
+	if ( ! _wppaSSRuns[mocc] ) {
+		_wppaFilmNoMove[mocc] = true;
+		_wppaGoto(mocc, idx);
+	}	
+}
+
 function wppaGotoKeepState(mocc, idx) {
 	// Goto the requested slide and preserve running state
 	_wppaDidGoto[mocc] = true;
@@ -327,7 +340,6 @@ function wppaValidateComment(mocc) {
 }
 
 function _wppaNextSlide(mocc, mode) {
-	_wppaLog('NextSlide', mocc);
 
 	var fg = _wppaFg[mocc];
 	var bg = 1 - fg;
@@ -431,7 +443,6 @@ function _wppaNextSlide(mocc, mode) {
 }
 
 function _wppaNextSlide_2(mocc) {
-	_wppaLog('NextSlide_2', mocc);
 
 	var fg, bg;	
 
@@ -465,7 +476,6 @@ function _wppaNextSlide_2(mocc) {
 }
 
 function _wppaNextSlide_3(mocc) {
-	_wppaLog('NextSlide_3', mocc);
 
 	var nw 		= _wppaFg[mocc];
 	var ol 		= 1 - nw;
@@ -618,7 +628,6 @@ function _wppaNextSlide_3(mocc) {
 }
 
 function _wppaNextSlide_4(mocc) {
-	_wppaLog('NextSlide_4', mocc);
 
 	var nw = _wppaFg[mocc];
 	var ol = 1-nw;
@@ -647,10 +656,15 @@ function _wppaNextSlide_4(mocc) {
 	jQuery('#bc-pname-'+mocc).html( _wppaNames[mocc][_wppaCurIdx[mocc]] );
 
 	// Adjust filmstrip
-	var xoffset;
-	xoffset = wppaFilmStripLength[mocc] / 2 - (_wppaCurIdx[mocc] + 0.5 + wppaPreambule) * wppaThumbnailPitch[mocc] - wppaFilmStripMargin[mocc];
-	if (wppaFilmShowGlue) xoffset -= (wppaFilmStripMargin[mocc] * 2 + 2);	// Glue
-	jQuery('#wppa-filmstrip-'+mocc).animate({marginLeft: xoffset+'px'});
+	if ( ! _wppaFilmNoMove[mocc] ) {
+		var xoffset;
+		xoffset = wppaFilmStripLength[mocc] / 2 - (_wppaCurIdx[mocc] + 0.5 + wppaPreambule) * wppaThumbnailPitch[mocc] - wppaFilmStripMargin[mocc];
+		if (wppaFilmShowGlue) xoffset -= (wppaFilmStripMargin[mocc] * 2 + 2);	// Glue
+		jQuery('#wppa-filmstrip-'+mocc).animate({marginLeft: xoffset+'px'});
+	}
+	else {
+		_wppaFilmNoMove[mocc] = false; // reset
+	}
 	
 	// Set rating mechanism
 	_wppaSetRatingDisplay(mocc);
@@ -660,7 +674,6 @@ function _wppaNextSlide_4(mocc) {
 }
 
 function _wppaNextSlide_5(mocc) {
-	_wppaLog('NextSlide_5', mocc);
 
 	// If we are going to the same slide, there is no need to hide and restore the subtitles and commentframe
 	if (!_wppaToTheSame) {	
@@ -676,6 +689,8 @@ function _wppaNextSlide_5(mocc) {
 		// Restor IPTC
 		jQuery("#iptc-"+mocc).html(_wppaIptcHtml[mocc][_wppaCurIdx[mocc]]);
 		jQuery("#exif-"+mocc).html(_wppaExifHtml[mocc][_wppaCurIdx[mocc]]);
+		// Restore share html
+		jQuery("#share-"+mocc).html(_wppaShareHtml[mocc][_wppaCurIdx[mocc]]);
 
 	}
 	_wppaToTheSame = false;					// This has now been worked out
@@ -698,37 +713,18 @@ function _wppaNextSlide_5(mocc) {
 	}
 	else {								// No toggle pending
 		wppaUpdateLightboxes(); 		// Refresh lighytbox
-		// Update addthis url and title if ( ( this is non-mini ) AND ( this is the only running non-mini OR there are no running non-minis ) )
-		if ( ! wppaIsMini[mocc] ) {			// This is NOT a widget
+		// Update url and title if ( ( this is non-mini ) AND ( this is the only running non-mini OR there are no running non-minis ) )
+		if ( ! wppaIsMini[mocc] ) {		// This is NOT a widget
+		// Prepare visual url (for addressline)
+			var visurl = wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
+				if ( visurl == '' ) visurl = _wppaShareUrl[mocc][_wppaCurIdx[mocc]];
+				
+			// Update possible QR Widget
+			if ( typeof(wppaQRUpdate) != 'undefined') wppaQRUpdate(_wppaShareUrl[mocc][_wppaCurIdx[mocc]]);
 			if ( ! _wppaSSRuns[mocc] ) {	// This is not running
-				// Update addthis share url
-				if ( wppaShare == 'site' ) url = _wppaShareUrl[mocc][_wppaCurIdx[mocc]]; //wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
-				if ( wppaShare == 'file' ) url = _wppaUrl[mocc][_wppaCurIdx[mocc]];
-				wppaUpdateAddThisUrl(url, _wppaNames[mocc][_wppaCurIdx[mocc]]);					
 				// Push state
-				wppaPushStateSlide(mocc, _wppaCurIdx[mocc], _wppaShareUrl[mocc][_wppaCurIdx[mocc]]);
+				wppaPushStateSlide(mocc, _wppaCurIdx[mocc], visurl);
 			}
-			/*
-			var nRuns = 0;
-			var i=1;
-			while (i<=wppaTopMoc) {
-				if ( typeof(_wppaSlides[i]) != 'undefined' && _wppaSSRuns[i] && ! wppaIsMini[i]) {
-					nRuns++;
-				}
-				i++;
-			}
-			if ( nRuns == 0 || ( nRuns == 1 && _wppaSSRuns[mocc] ) ) {	// No running OR This is the only running
-				var url = '';
-				if ( wppaShare == 'site' ) url = _wppaShareUrl[mocc][_wppaCurIdx[mocc]]; //wppaGetCurrentFullUrl(mocc, _wppaCurIdx[mocc]);
-				if ( wppaShare == 'file' ) url = _wppaUrl[mocc][_wppaCurIdx[mocc]];
-				console.log('ShareLink='+url);
-				if (url != '') {
-
-					wppaUpdateAddThisUrl(url, _wppaNames[mocc][_wppaCurIdx[mocc]]);	
-					wppaPushStateSlide(mocc, _wppaCurIdx[mocc]);					// Add to history stack
-				}
-			}
-			*/
 		}
 		// If running: Wait for next slide
 		if (_wppaSSRuns[mocc]) {				
@@ -744,7 +740,7 @@ var result;
 	switch (wppaArtMonkyLink) {
 	case 'file':
 	case 'zip':
-		result = '<a title="Download" onclick="wppaAjaxMakeOrigName('+mocc+', '+_wppaId[mocc][_wppaCurIdx[mocc]]+');" >'+_wppaNames[mocc][_wppaCurIdx[mocc]]+'</a>';
+		result = '<a title="Download" style="cursor:pointer;" onclick="wppaAjaxMakeOrigName('+mocc+', '+_wppaId[mocc][_wppaCurIdx[mocc]]+');" >'+_wppaNames[mocc][_wppaCurIdx[mocc]]+'</a>';
 		break;
 	case 'none':
 		result = _wppaNames[mocc][_wppaCurIdx[mocc]];
@@ -771,12 +767,14 @@ function wppaMakeTheSlideHtml(mocc, bgfg, idx) {
 			// Before current slide	// This does NOT work on lightbox 3 !
 			if (wppaLightBox=='wppa') {
 				while (i<idx) {
-					html += '<a href="'+_wppaUrl[mocc][i]+'" title="'+_wppaLbTitle[mocc][i]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']"></a>';
+					var url = _wppaUrl[mocc][i].replace('/thumbs/', '/');
+					html += '<a href="'+url+'" title="'+_wppaLbTitle[mocc][i]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']"></a>';
 						i++;
 				}
 			}
 			// Current slide
-			html += '<a href="'+_wppaUrl[mocc][idx]+'" target="'+_wppaLinkTarget[mocc][idx]+'" title="'+_wppaLbTitle[mocc][idx]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']">'+
+			var url = _wppaUrl[mocc][idx].replace('/thumbs/', '/');
+			html += '<a href="'+url+'" target="'+_wppaLinkTarget[mocc][idx]+'" title="'+_wppaLbTitle[mocc][idx]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']">'+
 //					'<img title="'+_wppaNames[mocc][idx]+'" id="theimg'+bgfg+'-'+mocc+'" '+_wppaSlides[mocc][idx]+
 					'<img title="'+_wppaLinkTitle[mocc][idx]+'" id="theimg'+bgfg+'-'+mocc+'" '+_wppaSlides[mocc][idx]+
 					'</a>';
@@ -784,7 +782,8 @@ function wppaMakeTheSlideHtml(mocc, bgfg, idx) {
 			if (wppaLightBox=='wppa') {
 				i = idx + 1;
 				while (i<_wppaUrl[mocc].length) {
-					html += '<a href="'+_wppaUrl[mocc][i]+'" title="'+_wppaLbTitle[mocc][i]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']"></a>';
+					var url = _wppaUrl[mocc][i].replace('/thumbs/', '/');
+					html += '<a href="'+url+'" title="'+_wppaLbTitle[mocc][i]+'" rel="'+wppaLightBox+'[slide-'+mocc+'-'+bgfg+']"></a>';
 					i++;
 				}
 			}
@@ -935,7 +934,6 @@ function wppaUpdateLightboxes() {
 }
 
 function _wppaNext(mocc) {
-	_wppaLog('Next', mocc);
 
 	// Check for end of non wrapped show
 	if ( ! wppaSlideWrap && _wppaCurIdx[mocc] == (_wppaSlides[mocc].length -1) ) return;
@@ -947,7 +945,6 @@ function _wppaNext(mocc) {
 }
 
 function _wppaNextN(mocc, n) {
-	_wppaLog('NextN', mocc);
 
 	// Check for end of non wrapped show
 	if ( ! wppaSlideWrap && _wppaCurIdx[mocc] >= (_wppaSlides[mocc].length - n) ) return;
@@ -959,7 +956,6 @@ function _wppaNextN(mocc, n) {
 }
 
 function _wppaNextOnCallback(mocc) {
-	_wppaLog('NextOnCallback', mocc);
 
 	// Check for end of non wrapped show
 	if ( ! wppaSlideWrap && _wppaCurIdx[mocc] == (_wppaSlides[mocc].length -1) ) return;
@@ -988,7 +984,6 @@ function _wppaNextOnCallback(mocc) {
 }
 
 function _wppaPrev(mocc) {
-	_wppaLog('Prev', mocc);
 	
 	// Check for begin of non wrapped show
 	if ( ! wppaSlideWrap && _wppaCurIdx[mocc] == 0 ) return;
@@ -1000,7 +995,6 @@ function _wppaPrev(mocc) {
 }
 
 function _wppaPrevN(mocc, n) {
-	_wppaLog('PrevN', mocc);
 	
 	// Check for begin of non wrapped show
 	if ( ! wppaSlideWrap && _wppaCurIdx[mocc] < n ) return;
@@ -1012,7 +1006,6 @@ function _wppaPrevN(mocc, n) {
 }
 
 function _wppaGoto(mocc, idx) {
-	_wppaLog('Goto', mocc);
 	
 	_wppaToTheSame = (_wppaNxtIdx[mocc] == idx);
 	_wppaNxtIdx[mocc] = idx;
@@ -1046,7 +1039,6 @@ function _wppaGotoContinue(mocc){
 }
 
 function _wppaStart(mocc, idx) {
-	_wppaLog('Start', mocc);
 	
 	if ( idx == -2 ) {	// Init at first without my rating
 		var i = 0;
@@ -1084,7 +1076,6 @@ function _wppaStart(mocc, idx) {
 }
 
 function _wppaStop(mocc) {
-	_wppaLog('Stop', mocc);
 	
     _wppaSSRuns[mocc] = false;
     jQuery('#startstop-'+mocc).html( wppaStart+' '+wppaSlideShow );  
@@ -1095,7 +1086,6 @@ function _wppaStop(mocc) {
 }
 
 function _wppaSpeed(mocc, faster) {
-	_wppaLog('Speed', 0);
 	
     if (faster) {
         if (_wppaTimeOut[mocc] > 500) _wppaTimeOut[mocc] /= 1.5;
@@ -1106,7 +1096,6 @@ function _wppaSpeed(mocc, faster) {
 }
 
 function _wppaLoadSpinner(mocc) {
-	_wppaLog('LoadSpinner', mocc);
 	
 	var top;
 	var lft;
@@ -1146,8 +1135,7 @@ function _wppaLoadSpinner(mocc) {
 }
 
 function _wppaUnloadSpinner(mocc) {
-	_wppaLog('UnloadSpinner', mocc);
-//return; // debug
+
 	jQuery('#spinner-'+mocc).html('');
 }
 
@@ -1163,7 +1151,7 @@ function wppaGetContainerWidth(mocc) {
 }
 
 function _wppaDoAutocol(mocc) {
-	_wppaLog('DoAutocol', mocc);
+	
 	var w;
 	var h;
 	if (!wppaAutoColumnWidth[mocc]) return;
@@ -1225,7 +1213,6 @@ function _wppaDoAutocol(mocc) {
 }
 
 function _wppaCheckRewind(mocc) {
-	_wppaLog('CheckRewind', mocc);
 
 	var n_images;
 	var n_diff;
@@ -1257,7 +1244,6 @@ function _wppaCheckRewind(mocc) {
 }
 
 function _wppaSetRatingDisplay(mocc) {
-	_wppaLog('setRatingDisplay', mocc);
 
 	var idx, avg, myr;
 	if (!document.getElementById('wppa-rating-'+mocc)) return; 	// No rating bar
@@ -1310,17 +1296,6 @@ function _wppaSetRatingDisplay(mocc) {
 					break;
 			}
 
-			/* Selection box
-			var htm = '<select id="wppa-rat-'+mocc+'" onchange="_wppaRateIt('+mocc+', this.value)">';
-				if (myr<1 || parseInt(myr)<myr) htm += '<option value="0">?</option>';
-			var sel = '';
-				for (i=wppaRatingMax; i>0;i--) {
-					if (myr == i) sel = 'selected="selected"'; else sel = '';
-					htm += '<option value="'+i+'" '+sel+' >'+i+'</option>';
-				}
-			htm += '</select>';
-			if (parseInt(myr)<myr) htm += '&nbsp;('+myr+')';
-			/* End selection box */
 			/* Row of numbers */
 			var htm = '';
 			for (i=1;i<=wppaRatingMax;i++) {
@@ -1339,7 +1314,6 @@ function _wppaSetRatingDisplay(mocc) {
 }
 		
 function _wppaSetRd(mocc, avg, where) {
-	_wppaLog('SetRd', mocc);
 		
 	var idx1 = parseInt(avg);
 	var idx2 = idx1 + 1;
@@ -1365,7 +1339,6 @@ function _wppaSetRd(mocc, avg, where) {
 }
 
 function _wppaFollowMe(mocc, idx) {
-	_wppaLog('FollowMe', mocc);
 
 	if (_wppaSSRuns[mocc]) return;				// Do not rate on a running show, what only works properly in Firefox								
 
@@ -1375,7 +1348,6 @@ function _wppaFollowMe(mocc, idx) {
 }
 
 function _wppaLeaveMe(mocc, idx) {
-	_wppaLog('LeaveMe', mocc);
 
 	if (_wppaSSRuns[mocc]) return;				// Do not rate on a running show, what only works properly in Firefox	
 
@@ -1385,7 +1357,7 @@ function _wppaLeaveMe(mocc, idx) {
 }
 
 function _wppaRateIt(mocc, value) {
-	_wppaLog('RateIt', mocc);
+
 if (value == 0) return;
 	var photoid = _wppaId[mocc][_wppaCurIdx[mocc]];
 	var oldval  = _wppaMyr[mocc][_wppaCurIdx[mocc]];
@@ -1442,7 +1414,6 @@ if (value == 0) return;
 }
 
 function _wppaValidateComment(mocc) {
-	_wppaLog('ValidateComment', mocc);
 
 	var photoid = _wppaId[mocc][_wppaCurIdx[mocc]];
 	
@@ -1475,13 +1446,11 @@ function _wppaValidateComment(mocc) {
 }
 
 function _wppaGo(url) {
-	_wppaLog('Go', 0);
 	
 	document.location = url;	// Go!
 }
 
 function _wppaBbb(mocc,where,act) {
-	_wppaLog('Bbb', mocc);
 	
 	if (_wppaSSRuns[mocc]) return;
 	
@@ -1507,19 +1476,31 @@ function _wppaBbb(mocc,where,act) {
 	}
 }
 
+function wppaOpenComments(mocc) {
+
+	if ( _wppaSSRuns[mocc] ) _wppaStop(mocc);
+		// Show existing comments
+		jQuery('#wppa-comtable-wrap-'+mocc).css('display', 'block');
+		// Show the input form table
+		jQuery('#wppa-comform-wrap-'+mocc).css('display', 'block');
+		// Hide the comment footer
+		jQuery('#wppa-comfooter-wrap-'+mocc).css('display', 'none');
+}
 
 function _wppaShowMetaData(mocc, key) {
-	_wppaLog('ShowMetaData', mocc);
 	
 	// What to do when the slideshow is NOT running
 	if ( ! _wppaSSRuns[mocc] ) {	
 		if (key == 'show') {			// Show
+		
+		if (wppaAutoOpenComments) {
 			// Show existing comments
 			jQuery('#wppa-comtable-wrap-'+mocc).css('display', 'block');
 			// Show the input form table
 			jQuery('#wppa-comform-wrap-'+mocc).css('display', 'block');
 			// Hide the comment footer
 			jQuery('#wppa-comfooter-wrap-'+mocc).css('display', 'none');
+}
 			// Fade the browse arrows in
 			if ( wppaSlideWrap || ( _wppaCurIdx[mocc] != 0 ) )
 				jQuery('.wppa-prev-'+mocc).fadeIn(300);
@@ -1531,7 +1512,7 @@ function _wppaShowMetaData(mocc, key) {
 			jQuery('#wppa-comtable-wrap-'+mocc).css('display', 'none');
 			// Hide the input form table
 			jQuery('#wppa-comform-wrap-'+mocc).css('display', 'none');
-			// Hide the comment footer
+			// Show the comment footer
 			jQuery('#wppa-comfooter-wrap-'+mocc).css('display', 'block');
 			// Fade the browse arrows out
 //			jQuery('.wppa-prev-'+mocc).fadeOut(300);	
@@ -1555,8 +1536,8 @@ function _wppaShowMetaData(mocc, key) {
 	}
 	else {
 		// Hide title and description
-		jQuery("#imagedesc-"+mocc).css('visibility', 'hidden'); 
-		jQuery("#imagetitle-"+mocc).css('visibility', 'hidden');
+//		jQuery("#imagedesc-"+mocc).css('visibility', 'hidden'); 
+//		jQuery("#imagetitle-"+mocc).css('visibility', 'hidden');
 		// Hide counter	
 		jQuery("#counter-"+mocc).css('visibility', 'hidden');
 		// Fade the browse arrows out
@@ -1565,8 +1546,7 @@ function _wppaShowMetaData(mocc, key) {
 		// Hide iptc
 		jQuery("#iptccontent-"+mocc).css('visibility', 'hidden'); 
 		jQuery("#exifcontent-"+mocc).css('visibility', 'hidden'); 
-		// Hide addthis
-//		jQuery(".wppa-addthis-"+mocc).css('visibility', 'hidden');
+
 	}
 }
 
@@ -1630,7 +1610,7 @@ var url;
 	else {
 		url += "wppa-photo="+_wppaId[mocc][idx];
 	}
-	
+
 	return url;
 }
 
@@ -1776,9 +1756,13 @@ function wppaPopUp(mocc, elm, id, rating) {
 	var topDivBig, topDivSmall, leftDivBig, leftDivSmall;
 	var heightImgBig, heightImgSmall, widthImgBig, widthImgSmall, widthImgBigSpace;
 	var puImg;
+	var vOffset = 0;
 	
 	// stop if running 
 	clearTimeout(_wppaTimer[mocc]);
+	
+	// Vertical offset?
+	if (document.getElementById('wppa-albdesc-'+mocc)) vOffset = document.getElementById('wppa-albdesc-'+mocc).clientHeight;
 	
 	// Give this' occurrances popup its content
 	if (document.getElementById('x-'+id+'-'+mocc)) {
@@ -1796,7 +1780,13 @@ function wppaPopUp(mocc, elm, id, rating) {
 				jQuery('#wppa-popup-'+mocc).html('<div class="wppa-popup" style="background-color:'+wppaBackgroundColorImage+'; text-align:center;"><img id="wppa-img-'+mocc+'" src="'+elm.src+'" title="" style="border-width: 0px;" onclick="'+wppaPopupOnclick[id]+'" />'+popuptext+'</div>');
 				break;
 			default:
-				jQuery('#wppa-popup-'+mocc).html('<div class="wppa-popup" style="background-color:'+wppaBackgroundColorImage+'; text-align:center;"><a id="wppa-a" href="'+document.getElementById('x-'+id+'-'+mocc).href+'" '+target+' style="line-height:1px;" ><img id="wppa-img-'+mocc+'" src="'+elm.src+'" title="" style="border-width: 0px;" /></a>'+popuptext+'</div>');
+				if (elm.onclick) {
+					jQuery('#wppa-popup-'+mocc).html('<div class="wppa-popup" style="background-color:'+wppaBackgroundColorImage+'; text-align:center;"><img id="wppa-img-'+mocc+'" src="'+elm.src+'" title="" style="border-width: 0px;" />'+popuptext+'</div>');
+					document.getElementById('wppa-img-'+mocc).onclick = elm.onclick;
+				}
+				else {
+					jQuery('#wppa-popup-'+mocc).html('<div class="wppa-popup" style="background-color:'+wppaBackgroundColorImage+'; text-align:center;"><a id="wppa-a" href="'+document.getElementById('x-'+id+'-'+mocc).href+'" '+target+' style="line-height:1px;" ><img id="wppa-img-'+mocc+'" src="'+elm.src+'" title="" style="border-width: 0px;" /></a>'+popuptext+'</div>');
+				}
 		}
 	}
 	
@@ -1814,6 +1804,7 @@ function wppaPopUp(mocc, elm, id, rating) {
 	// Compute starting coords
 	leftDivSmall = parseInt(elm.offsetLeft) - 7 - 5 - 1; // thumbnail_area:padding, wppa-img:padding, wppa-border; jQuery().css("padding") does not work for padding in css file, only when litaral in the tag
 	topDivSmall = parseInt(elm.offsetTop) - 7 - 5 - 1;		
+		topDivSmall -= vOffset;
 	// Compute starting sizes
 	widthImgSmall = parseInt(elm.clientWidth);
 	heightImgSmall = parseInt(elm.clientHeight);
@@ -1909,7 +1900,7 @@ function wppaFullPopUp(mocc, id, url, xwidth, xheight, ajaxurl) {
 }
 
 // Part 3: Ajax
-// Additionally: functions to change the url for addthis during ajax and browse operations
+// Additionally: functions to change the url during ajax and browse operations
 
 // AJAX RENDERING INCLUDING HISTORY MANAGEMENT
 // IF AJAX NOT ALLOWED, ALSO NO HISTORY MENAGEMENT!!
@@ -1925,12 +1916,11 @@ var wppaUsePhotoNamesInUrls = false;
 
 // Initialize
 jQuery(document).ready(function(e) {
-	// Are we allowed anyway?
-	if ( ! wppaAllowAjax ) return;	// Not allowed today
-	
-	if ( wppaGetXmlHttp() ) {
+	// Are we allowed and capable to ajax?
+	if ( wppaAllowAjax && wppaGetXmlHttp() ) {
 		wppaCanAjaxRender = true;
 	}
+	// Can we do history.pushState ?
 	if ( typeof(history.pushState) != 'undefined' ) {		
 		// Save entire initial page content ( I do not know which container is going to be modified first )
 		var i=1;
@@ -1971,6 +1961,7 @@ window.onpopstate = function(event) {
 			}
 		}
 		else {
+		/*
 			occ = wppaFirstOccur;
 			// Restore first modified occurrences content
 			jQuery('#wppa-container-'+occ).html(wppaStartHtml[occ]);
@@ -1993,12 +1984,15 @@ window.onpopstate = function(event) {
 				}
 				if ( idx < _wppaId[occ].length ) _wppaGoto(occ, idx);
 			}
+		*/
 		}
 		// If it is a slideshow, stop it
 		if ( document.getElementById('theslide0-'+occ) ) {
 			_wppaStop(occ);
 		}
 	}
+	if ( typeof(wppaQRUpdate) != 'undefined') wppaQRUpdate(document.location.href);
+//	wppaQRData = document.location.href; //????
 };  
 
 // The AJAX rendering routine
@@ -2020,10 +2014,10 @@ function wppaDoAjaxRender(mocc, ajaxurl, newurl) {
 					cont = xmlhttp.responseText;
 					try {
 						history.pushState({page: wppaHis, occur: mocc, type: 'html', html: cont}, "---", newurl);
-						console.log('Ajax rendering: History stack updated');
+						wppaConsoleLog('Ajax rendering: History stack updated');
 					}
 					catch(err) {
-						console.log('Ajax rendering: Failed to update history stack');
+						wppaConsoleLog('Ajax rendering: Failed to update history stack');
 					}
 					if ( wppaFirstOccur == 0 ) wppaFirstOccur = mocc;
 				}
@@ -2032,8 +2026,8 @@ function wppaDoAjaxRender(mocc, ajaxurl, newurl) {
 //				if (typeof(myLightbox)!="undefined") myLightbox.updateImageList();
 				wppaUpdateLightboxes();
 				
-				/* addthis */
-				wppaUpdateAddThisUrl(newurl, '');
+				/* qrcode */
+				if ( typeof(wppaQRUpdate) != 'undefined') wppaQRUpdate(newurl);
 
 				/* Autocol? */
 				wppaColWidth[mocc] = 0;	// clear
@@ -2057,8 +2051,6 @@ function wppaDoAjaxRender(mocc, ajaxurl, newurl) {
 	else {	// Ajax NOT possible
 		document.location.href = newurl;
 
-		/* addthis */
-		wppaUpdateAddThisUrl(newurl, '');
 		/* Autocol? */
 		wppaColWidth[mocc] = 0;	// clear: forces recalc
 	}
@@ -2072,49 +2064,14 @@ function wppaPushStateSlide(mocc, slide, url) {
 			if (url != '') {
 				try {
 					history.pushState({page: wppaHis, occur: mocc, type: 'slide', slide: slide}, "---", url);
-					console.log('Slide history stack updated');
+					wppaConsoleLog('Slide history stack updated');
 				}
 				catch(err) {
-					console.log('Slide history stack update failed');
+					wppaConsoleLog('Slide history stack update failed');
 				}
 			}
 		}
 	}
-}
-
-// WPPA modules for addthis.
-var wppaAddThis = false;
-
-jQuery(document).ready(function(){
-	if (typeof(addthis) != 'undefined') {
-		addthis.init();	// In case loaded asynchronously
-		wppaAddThis = true;
-	}
-});
-
-function wppaUpdateAddThisUrl(xurl, title) {
-	if ( ! wppaAddThis ) return;	// No addthis activated
-	
-	var url = encodeURI(xurl);
-	
-	try {
-		addthis.update('share', 'url', url);
-		console.log('AddThis share url update to '+url+' succeeded');
-	}
-	catch(err){
-		console.log('AddThis share url update to '+url+' failed');
-	}
-	if (title != '') {
-		try {
-			addthis.update('share', 'title', title);
-			console.log('AddThis share title update to '+title+' succeeded');
-		}
-		catch(err) {
-			console.log('AddThis share title update to '+title+' failed');
-		}
-	}
-//  Does not exist unfortunately...
-//	addthis.update('share', 'description', 'Geupdate Desc');
 }
 
 // WPPA EMBEDDED NATIVE LIGHTBOX FUNCTIONALITY
@@ -2549,5 +2506,11 @@ function wppaAjaxMakeOrigName(mocc, id) {
 	else {
 		alert('Comm error encountered');
 		return false;
+	}
+}
+
+function wppaConsoleLog(arg) {
+	if ( typeof(console) != 'undefined' ) {
+		console.log(arg);
 	}
 }

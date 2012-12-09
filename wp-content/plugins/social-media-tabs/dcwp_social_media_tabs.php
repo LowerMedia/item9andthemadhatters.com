@@ -1,11 +1,11 @@
 <?php
 /*
 		Plugin Name: Social Media Tabs
-		Plugin URI: http://www.designchemical.com/blog/index.php/wordpress-plugin-social-media-tabs/
+		Plugin URI: http://www.designchemical.com/blog/index.php/wordpress-plugins/wordpress-plugin-social-media-tabs/
 		Tags: social media, facebook, twitter, tweets, google+1, flickr, YouTube, pinterest, rss, profile, tabs, social networks, bookmarks, buttons, animated, jquery, flyout, sliding
 		Description: Social media tabs allows you to add facebook, google +1, twitter, flickr, pinterest, YouTube subscription and RSS profiles and feeds to any widget area with stylish sliding tabs. Option also to have the tabs slide out from the side of the browsers
 		Author: Lee Chestnutt
-		Version: 1.4.2
+		Version: 1.4.3
 		Author URI: http://www.designchemical.com
 */
 
@@ -33,7 +33,7 @@ class dc_jqsocialmediatabs {
 	}
 	
 	function get_plugin_directory(){
-		return WP_PLUGIN_URL . '/social-media-tabs';	
+		return plugins_url() . '/social-media-tabs';	
 	}
 };
 

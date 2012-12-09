@@ -49,3 +49,8 @@ p.dcwp-row label {float: left; width: 70px; padding-top: 3px; display: block;}
 #dcsmt_redirect {width: 140px;}
 .dcsmt-icon {position: relative;}
 .dcsmt-icon img {position: absolute; top: 0; right: 0;}
+
+.premium-list li {width: 100%; overflow: hidden;}
+.premium-list li img {float: left;margin: -2px 5px 0 0; width: 26px;}
+.premium-ad {margin-bottom: 10px; text-align: center;}
+.premium-ad img {border: 1px solid #ccc;}

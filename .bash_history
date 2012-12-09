@@ -199,3 +199,8 @@ git add .
 git commit -m "removing marquee ad at bottom with css"
 git push -u
 ls
+git status
+git add .
+git push -u
+git commit -m "adding new posts, old changes"
+git push -u

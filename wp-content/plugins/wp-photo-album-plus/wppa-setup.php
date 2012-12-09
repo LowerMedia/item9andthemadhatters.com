@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains all the setup stuff
-* Version 4.7.16
+* Version 4.8.6
 *
 */
 
@@ -133,14 +133,14 @@ global $silent;
 	
 	// Do the things dbdelta does not do.
 	// Character set
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_ALBUMS . " MODIFY name text CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_PHOTOS . " MODIFY name text CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_ALBUMS . " MODIFY description text CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_PHOTOS . " MODIFY description longtext CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_PHOTOS . " MODIFY linktitle text CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_COMMENTS . " MODIFY comment text CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_IPTC . " MODIFY description text CHARACTER SET utf8"));
-	wppa_setup_query($wpdb->prepare( "ALTER TABLE " . WPPA_EXIF . " MODIFY description text CHARACTER SET utf8"));
+	wppa_setup_query( "ALTER TABLE " . WPPA_ALBUMS . " MODIFY name text CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_PHOTOS . " MODIFY name text CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_ALBUMS . " MODIFY description text CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_PHOTOS . " MODIFY description longtext CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_PHOTOS . " MODIFY linktitle text CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_COMMENTS . " MODIFY comment text CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_IPTC . " MODIFY description text CHARACTER SET utf8");
+	wppa_setup_query( "ALTER TABLE " . WPPA_EXIF . " MODIFY description text CHARACTER SET utf8");
 	// Default values
 	get_currentuserinfo();
 	$user = $current_user->user_login;
@@ -192,7 +192,7 @@ global $silent;
 			wppa_copy_setting('wppa_fontweight_numbar', 'wppa_fontweight_numbar_active');
 		}
 		if ( $old_rev <= '455') {	// rating_count added to WPPA_PHOTOS
-			$phs = $wpdb->get_results($wpdb->prepare('SELECT `id` FROM `'.WPPA_PHOTOS), 'ARRAY_A');
+			$phs = $wpdb->get_results( 'SELECT `id` FROM `'.WPPA_PHOTOS.'`', ARRAY_A );
 			if ($phs) foreach ($phs as $ph) {
 				$cnt = $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM `'.WPPA_RATING.'` WHERE `photo` = %s', $ph['id']));
 				$wpdb->query($wpdb->prepare('UPDATE `'.WPPA_PHOTOS.'` SET `rating_count` = %s WHERE `id` = %s', $cnt, $ph['id']));
@@ -228,6 +228,21 @@ global $silent;
 			}	
 			if ( WPPA_DEBUG ) if ($ah || $ph) wppa_ok_message($ah.' out of '.$at.' albums and '.$ph.' out of '.$pt.' photos html converted');
 		}
+		if ( $old_rev <= '482' ) {	// Share box added
+			$so = get_option('wppa_slide_order', '0,1,2,3,4,5,6,7,8,9');
+			if ( strlen($so) == '19' ) {
+				update_option('wppa_slide_order', $so.',10');
+			}
+			$so = get_option('wppa_slide_order_split', '0,1,2,3,4,5,6,7,8,9,10');
+			if ( strlen($so) == '22' ) {
+				update_option('wppa_slide_order_split', $so.',11');
+			}
+			wppa_remove_setting('wppa_sharetype');
+			wppa_copy_setting('wppa_bgcolor_namedesc', 'wppa_bgcolor_share');
+			wppa_copy_setting('wppa_bcolor_namedesc', 'wppa_bcolor_share');
+
+		}
+
 	}
 	
 	// Set default values for new options
@@ -249,12 +264,12 @@ global $silent;
 	// Check if this update comes with a new wppa-theme.php and/or a new wppa-style.css
 	// If so, produce message
 	$key = '0';
-	if ( $old_rev < '460' ) {		// theme changed since...
+	if ( $old_rev < '480' ) {		// theme changed since...
 		$usertheme_old 	= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa_theme.php';
 		$usertheme 		= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa-theme.php';
 		if ( is_file( $usertheme ) || is_file( $usertheme_old ) ) $key += '2';
 	}
-	if ( $old_rev < '460' ) {		// css changed since...
+	if ( $old_rev < '480' ) {		// css changed since...
 		$userstyle_old 	= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa_style.css';
 		$userstyle 		= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa-style.css';
 		if ( is_file( $userstyle ) || is_file( $userstyle_old ) ) $key += '1';
@@ -366,6 +381,7 @@ Hide Camera info
 						'wppa_enlarge' 					=> 'no',	// 3
 						'wppa_fullimage_border_width' 	=> '',		// 4
 						'wppa_numbar_max'				=> '10',	// 5
+						'wppa_share_size'				=> '32',
 						// C Thumbnails
 						'wppa_thumbsize' 				=> '100',		// 1
 						'wppa_thumb_aspect'				=> '0:0:none',	// 2
@@ -380,6 +396,7 @@ Hide Camera info
 						'wppa_max_cover_width'			=> '1024',	// 1
 						'wppa_text_frame_height'		=> '54',	// 2
 						'wppa_smallsize' 				=> '150',	// 3
+						'wppa_coversize_is_height'		=> 'no',	// 3.1
 						'wppa_album_page_size' 			=> '0',		// 4
 						// E Rating & comments
 						'wppa_rating_max'				=> '5',		// 1
@@ -395,6 +412,8 @@ Hide Camera info
 						'wppa_thumbnail_widget_size'	=> '86',	// 6
 						'wppa_lasten_count'				=> '10',	// 7
 						'wppa_lasten_size' 				=> '86',	// 8
+						'wppa_album_widget_count'		=> '10',
+						'wppa_album_widget_size'		=> '86',
 						// G Overlay
 						'wppa_ovl_txt_lines'			=> 'auto',	// 1
 						'wppa_magnifier'				=> 'magnifier-small.png',	// 2
@@ -432,6 +451,14 @@ Hide Camera info
 						'wppa_show_exif'					=> 'no',		// 18
 						'wppa_copyright_on'					=> 'yes',		// 19
 						'wppa_copyright_notice'				=> __('<span style="color:red" >Warning: Do not upload copyrighted material!</span>', 'wppa'),	// 20
+						'wppa_share_on'						=> 'no',
+						'wppa_share_on_widget'				=> 'no',
+						'wppa_share_qr'						=> 'yes',
+						'wppa_share_facebook'				=> 'yes',
+						'wppa_share_twitter'				=> 'yes',
+						'wppa_share_hyves'					=> 'yes',
+						
+						'wppa_share_single_image'			=> 'no',
 						// C Thumbnails
 						'wppa_thumb_text_name' 				=> 'yes',	// 1
 						'wppa_thumb_text_desc' 				=> 'yes',	// 2
@@ -441,6 +468,7 @@ Hide Camera info
 						'wppa_popup_text_desc_strip'		=> 'no',	// 5.1
 						'wppa_popup_text_rating' 			=> 'yes',	// 6
 						'wppa_show_rating_count'			=> 'no',	// 7
+						'wppa_albdesc_on_thumbarea'			=> 'none',
 						// D Covers
 						'wppa_show_cover_text' 				=> 'yes',	// 1
 						'wppa_enable_slideshow' 			=> 'yes',	// 2
@@ -461,6 +489,10 @@ Hide Camera info
 						'wppa_ovl_sphoto_desc'				=> 'no',
 						'wppa_ovl_mphoto_name'				=> 'yes',
 						'wppa_ovl_mphoto_desc'				=> 'no',
+						'wppa_ovl_alw_name'					=> 'yes',
+						'wppa_ovl_alw_desc'					=> 'no',
+						'wppa_ovl_cover_name'				=> 'yes',
+						'wppa_ovl_cover_desc'				=> 'no',
 						'wppa_ovl_show_counter'				=> 'yes',
 						'wppa_show_zoomin'					=> 'yes',
 
@@ -489,11 +521,14 @@ Hide Camera info
 						'wppa_bcolor_iptc' 				=> '#bbbbbb',
 						'wppa_bgcolor_exif'				=> '#dddddd',
 						'wppa_bcolor_exif' 				=> '#bbbbbb',
+						'wppa_bgcolor_share'			=> '#dddddd',
+						'wppa_bcolor_share' 			=> '#bbbbbb',
 
 						// Table IV: Behaviour
 						// A System
 						'wppa_allow_ajax'				=> 'no',
 						'wppa_use_photo_names_in_urls'	=> 'no',
+						'wppa_use_pretty_links'			=> 'no',
 						// B Full size and Slideshow
 						'wppa_fullvalign' 				=> 'fit',
 						'wppa_fullhalign' 				=> 'center',
@@ -507,6 +542,8 @@ Hide Camera info
 						'wppa_fulldesc_align'			=> 'center',
 						'wppa_clean_pbr'				=> 'yes',
 						'wppa_run_wppautop_on_desc'		=> 'no',
+						'wppa_auto_open_comments'		=> 'yes',
+						'wppa_film_hover_goto'			=> 'no',
 						// C Thumbnail
 						'wppa_list_photos_by' 			=> '0',
 						'wppa_list_photos_desc' 		=> 'no',
@@ -535,6 +572,7 @@ Hide Camera info
 						'wppa_comment_moderation'		=> 'logout',
 						'wppa_comment_email_required'	=> 'yes',
 						'wppa_comment_notify'			=> 'none',
+						'wppa_comment_notify_added'		=> 'yes',
 						// G Overlay
 						'wppa_ovl_opacity'				=> '80',
 						'wppa_ovl_onclick'				=> 'none',
@@ -639,7 +677,11 @@ Hide Camera info
 						
 						'wppa_art_monkey_link'				=> 'none',
 						'wppa_art_monkey_popup_link'		=> 'file',
-
+/* Niew */
+						'wppa_album_widget_linktype'		=> 'content',
+						'wppa_album_widget_linkpage'		=> '0',
+						'wppa_album_widget_blank'			=> 'no',
+/* end nieuw */
 						
 						// Table VII: Security
 						// B
@@ -688,6 +730,8 @@ Hide Camera info
 						'wppa_newphoto_description'		=> $npd,	// 4
 						'wppa_upload_limit_count'		=> '0',		// 5a
 						'wppa_upload_limit_time'		=> '0',		// 5b
+						'wppa_grant_an_album'		=> 'no',
+						'wppa_grant_parent'			=> '0',
 						// C Search
 						'wppa_search_linkpage' 			=> '0',		// 1
 						'wppa_excl_sep' 				=> 'no',	// 2
@@ -700,15 +744,14 @@ Hide Camera info
 						'wppa_watermark_upload'			=> '',
 						'wppa_watermark_opacity'		=> '20',
 						
-						'wppa_slide_order'				=> '0,1,2,3,4,5,6,7,8,9',
-						'wppa_slide_order_split'		=> '0,1,2,3,4,5,6,7,8,9,10',
+						'wppa_slide_order'				=> '0,1,2,3,4,5,6,7,8,9,10',
+						'wppa_slide_order_split'		=> '0,1,2,3,4,5,6,7,8,9,10,11',
 						'wppa_swap_namedesc' 			=> 'no',
 						'wppa_split_namedesc'			=> 'no',
 
 						// F Other plugins
 						'wppa_cp_points_comment'		=> '0',
 						'wppa_cp_points_rating'			=> '0',
-						'wppa_sharetype'				=> 'site',
 
 						// Photo of the day widget
 						'wppa_widgettitle'			=> __('Photo of the day', 'wppa'),
@@ -733,8 +776,14 @@ Hide Camera info
 						
 						// Comment admin
 						'wppa_comadmin_show' 		=> 'all',
-						'wppa_comadmin_order' 		=> 'timestamp'
+						'wppa_comadmin_order' 		=> 'timestamp',
 								
+						// QR code settings
+						'wppa_qr_size'				=> '200',
+						'wppa_qr_color'				=> '#000000',
+						'wppa_qr_bgcolor'			=> '#FFFFFF'
+						
+						
 						);
 
 	array_walk($wppa_defaults, 'wppa_set_default', $force);

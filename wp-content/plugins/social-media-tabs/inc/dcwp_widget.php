@@ -526,7 +526,8 @@ class dc_jqsocialmediatabs_widget extends WP_Widget {
 			?>
 			<script type="text/javascript">
 				jQuery(document).ready(function($) {
-					$('#<?php echo $widget_id.'-item'; ?>').dcSlickTabs({
+					
+					var config = {
 						location: '<?php echo $location; ?>',
 						align: '<?php echo $align; ?>',
 						offset: <?php echo $offset; ?>,
@@ -540,8 +541,16 @@ class dc_jqsocialmediatabs_widget extends WP_Widget {
 						direction: '<?php echo $direction; ?>',
 						autoClose: <?php echo $autoClose; ?>,
 						method: '<?php echo $method; ?>',
-						start: <?php echo $start; ?>
-					});
+						start: <?php echo $start; ?>					
+					};
+					if(!jQuery().dcSlickTabs) {
+						$.getScript('<?php echo dc_jqsocialmediatabs::get_plugin_directory(); ?>/js/jquery.dcsmt.1.0.js', function(){
+							jQuery('#<?php echo $widget_id.'-item'; ?>').dcSlickTabs(config);
+						}); 
+					} else {
+						jQuery('#<?php echo $widget_id.'-item'; ?>').dcSlickTabs(config);
+					}
+					
 					<?php
 						if($this->get_dcsmt_default('links') == 'true') { 
 					?>

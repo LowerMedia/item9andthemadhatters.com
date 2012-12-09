@@ -53,17 +53,36 @@ if(!class_exists('dcwp_plugin_admin_dcsmt')) {
 			return $links; 
 
 		}
-
-		function dcwp_donate() {
-
-			$content = '<p>If you use this plugin and find it useful please consider a donation as a token of your appreciation</p>';
-			$content .= '<form name="_xclick" id="form-dcwp-donate" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">';
-			$content .= '<input type="hidden" name="cmd" value="_s-xclick">';
-			$content .= '<input type="hidden" name="hosted_button_id" value="NVWNM7CSNMEHY">';
-			$content .= '<input type="image" src="https://www.paypalobjects.com/WEBSCR-640-20110306-1/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"><img alt="" border="0" src="https://www.paypalobjects.com/WEBSCR-640-20110306-1/nl_NL/i/scr/pixel.gif" width="1" height="1">';
-			$content .= '</form>';
-
-			$this->postbox($this->hook.'-donatebox','Donate $10, $20 or even $50!',$content);		
+		
+		function dcwp_premium() {
+			
+			$icons = '<img src="'.dc_jqsocialmediatabs::get_plugin_directory() . '/inc/images/';
+			
+			$content = '<div class="premium-ad"><a href="http://www.designchemical.com/blog/index.php/premium-wordpress-plugins/premium-wordpress-plugin-social-network-tabs/" target="_blank"><img src="'.dc_jqsocialmediatabs::get_plugin_directory() . '/inc/images/dcsnt_250_125.png" alt="Wordpress Social Network Tabs" /></a></div>';
+			$content .= '<p><strong>Includes 17 social networks with 49 feed options:</strong></p>';
+			$content .= '<ul class="premium-list">
+			<li>'.$icons.'twitter.png" alt="" />Twitter Latest Tweets &#8211; Profile, Twitter List or Search</li>
+<li>'.$icons.'google.png" alt="" />Google Latest +1s</li>
+<li>'.$icons.'facebook.png" alt="" />Facebook Page Wall Posts</li>
+<li>'.$icons.'facebook.png" alt="" />Facebook Like Box/Stream</li>
+<li>'.$icons.'facebook.png" alt="" />Facebook Recommendations</li>
+<li>'.$icons.'instagram.png" alt="" />Instagram &#8211; User Feed, Search, Location Feed or Location Search</li>
+<li>'.$icons.'linkedin.png" alt="" />LinkedIn - Company Profile, Member Profile, Company Insider &#038; Jobs Plugins</li>
+<li>'.$icons.'tumblr.png" alt="" />Tumblr Latest Posts</li>
+<li>'.$icons.'youtube.png" alt="" />Youtube Latest Uploads/Favorites</li>
+<li>'.$icons.'vimeo.png" alt="" />Vimeo Likes/Videos/Appeared In/Albums/Channels/Groups</li>
+<li>'.$icons.'delicious.png" alt="" />Delicious Latest Bookmarks</li>
+<li>'.$icons.'digg.png" alt="" />Latest Diggs</li>
+<li>'.$icons.'pinterest.png" alt="" />Pinterest Pins</li>
+<li>'.$icons.'flickr.png" alt="" />Flickr Gallery</li>
+<li>'.$icons.'rss.png" alt="" />RSS Latest Posts</li>
+<li>'.$icons.'dribbble.png" alt="" />Dribbble Latest Shots or Likes</li>
+<li>'.$icons.'stumbleupon.png" alt="" />Stumbleupon Favorites/Reviews</li>
+<li>'.$icons.'lastfm.png" alt="" />Last.fm Loved/Recent/Reply Tracker</li>
+<li>'.$icons.'deviantart.png" alt="" />Deviantart Latest Posts</li>';
+			$content .= '</ul>';
+			$content .= '<p><a href="http://www.designchemical.com/blog/index.php/premium-wordpress-plugins/premium-wordpress-plugin-social-network-tabs/" target="_blank">Check out the demo site!</a></p>';
+			$this->postbox($this->hook.'-premium','Upgrade to our PRO version <a href="http://www.designchemical.com/blog/index.php/premium-wordpress-plugins/premium-wordpress-plugin-social-network-tabs/" target="_blank">Social Network Tabs</a>',$content);		
 
 		}
 
@@ -138,6 +157,11 @@ s1.parentNode.insertBefore(s, s1);
 							  </script>
 							  <script type="text/javascript" src="http://www.reddit.com/static/button/button2.js"></script></li>';
 			$content .= '</ul><div class="clear"></div>';
+			$content .= '<form name="_xclick" id="form-dcwp-donate" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">';
+			$content .= '<input type="hidden" name="cmd" value="_s-xclick">';
+			$content .= '<input type="hidden" name="hosted_button_id" value="NVWNM7CSNMEHY">';
+			$content .= '<input type="image" src="https://www.paypalobjects.com/WEBSCR-640-20110306-1/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"><img alt="" border="0" src="https://www.paypalobjects.com/WEBSCR-640-20110306-1/nl_NL/i/scr/pixel.gif" width="1" height="1">';
+			$content .= '</form>';
 
 			$this->postbox($this->hook.'-likebox','Share it, rate it, tell your friends!',$content);
 		}
@@ -196,7 +220,7 @@ s1.parentNode.insertBefore(s, s1);
 			<div class="metabox-holder">	
 				<div class="meta-box-sortables">
 					<?php
-						$this->dcwp_donate();
+						$this->dcwp_premium();
 						$this->likebox();
 						$this->support_box();
 						$this->latest_posts();

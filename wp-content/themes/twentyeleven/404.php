@@ -18,9 +18,8 @@ get_header(); ?>
 				</header>
 
 				<div class="entry-content">
-					<br/><p><?php _e( '<strong>It seems we can&rsquo;t find what you&rsquo;re looking for</strong>. Perhaps searching, or one of the links below, can help.', 'twentyeleven' ); ?></p>
-<center><h1>Lost?! Well so are we! </h1></center>					
-<img src="http://item9andthemadhatters.com/wp-content/uploads/2012/04/iowa-city-rock-band_item-9-mad-hatters_live-music-entertainment.jpg" />
+					<p><?php _e( 'It seems we can&rsquo;t find what you&rsquo;re looking for. Perhaps searching, or one of the links below, can help.', 'twentyeleven' ); ?></p>
+
 					<?php get_search_form(); ?>
 
 					<?php the_widget( 'WP_Widget_Recent_Posts', array( 'number' => 10 ), array( 'widget_id' => '404' ) ); ?>

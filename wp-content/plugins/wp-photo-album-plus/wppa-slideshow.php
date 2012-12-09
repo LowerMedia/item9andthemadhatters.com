@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains all the slideshow high level functions
-* Version 4.7.14
+* Version 4.8.3
 *
 */
 
@@ -13,7 +13,7 @@ global $wppa_opt;
 	if ( $wppa_opt['wppa_split_namedesc'] ) {
 		$indexes = explode(',', $wppa_opt['wppa_slide_order_split']);
 		$i = '0';
-		while ( $i < '11' ) {
+		while ( $i < '12' ) {
 			switch ( $indexes[$i] ) {
 				case '0':
 					wppaStartStop('optional');				// The 'Slower | start/stop | Faster' bar
@@ -48,6 +48,9 @@ global $wppa_opt;
 				case '10':
 					wppa_exif('optional');					// The EXIF box
 					break;
+				case '11':
+					wppa_share('optional');					// The Share box
+					break;
 				default:
 					break;
 			}
@@ -57,7 +60,7 @@ global $wppa_opt;
 	else {
 		$indexes = explode(',', $wppa_opt['wppa_slide_order']);
 		$i = '0';
-		while ( $i < '10' ) {
+		while ( $i < '11' ) {
 			switch ( $indexes[$i] ) {
 				case '0':
 					wppaStartStop('optional');				// The 'Slower | start/stop | Faster' bar
@@ -88,6 +91,9 @@ global $wppa_opt;
 					break;
 				case '9':
 					wppa_exif('optional');					// The EXIF box
+					break;
+				case '10':
+					wppa_share('optional');					// The Share box
 					break;
 				default:
 					break;
@@ -131,9 +137,9 @@ global $wppa_opt;
 	}
 
 	$wppa['out'] .= wppa_nltab('+').'<div id="prevnext1-'.$wppa['master_occur'].'" class="wppa-box wppa-nav wppa-nav-text" style="text-align: center; '.__wcs('wppa-box').__wcs('wppa-nav').__wcs('wppa-nav-text').$hide.'">';
-		$wppa['out'] .= wppa_nltab().'<a id="speed0-'.$wppa['master_occur'].'" class="wppa-nav-text speed0" style="'.__wcs('wppa-nav-text').'" onclick="wppaSpeed('.$wppa['master_occur'].', false)">'.__a('Slower', 'wppa_theme').'</a> | ';
-		$wppa['out'] .= wppa_nltab().'<a id="startstop-'.$wppa['master_occur'].'" class="wppa-nav-text startstop" style="'.__wcs('wppa-nav-text').'" onclick="wppaStartStop('.$wppa['master_occur'].', -1)">'.__a('Start', 'wppa_theme').'</a> | ';
-		$wppa['out'] .= wppa_nltab().'<a id="speed1-'.$wppa['master_occur'].'" class="wppa-nav-text speed1" style="'.__wcs('wppa-nav-text').'" onclick="wppaSpeed('.$wppa['master_occur'].', true)">'.__a('Faster', 'wppa_theme').'</a>';
+		$wppa['out'] .= wppa_nltab().'<a id="speed0-'.$wppa['master_occur'].'" class="wppa-nav-text speed0" style="'.__wcs('wppa-nav-text').'" onclick="wppaSpeed('.$wppa['master_occur'].', false); return false;">'.__a('Slower', 'wppa_theme').'</a> | ';
+		$wppa['out'] .= wppa_nltab().'<a id="startstop-'.$wppa['master_occur'].'" class="wppa-nav-text startstop" style="'.__wcs('wppa-nav-text').'" onclick="wppaStartStop('.$wppa['master_occur'].', -1); return false;">'.__a('Start', 'wppa_theme').'</a> | ';
+		$wppa['out'] .= wppa_nltab().'<a id="speed1-'.$wppa['master_occur'].'" class="wppa-nav-text speed1" style="'.__wcs('wppa-nav-text').'" onclick="wppaSpeed('.$wppa['master_occur'].', true); return false;">'.__a('Faster', 'wppa_theme').'</a>';
 	$wppa['out'] .= wppa_nltab('-').'</div><!-- #prevnext1 -->';
 }
 
@@ -637,7 +643,6 @@ global $wppa_opt;
 
 		$wppa['out'] .= wppa_nltab('-').'</div><!-- #iptc -->';
 	}
-
 }
 
 // The EXIF box
@@ -658,5 +663,26 @@ global $wppa_opt;
 
 		$wppa['out'] .= wppa_nltab('-').'</div><!-- #exif -->';
 	}
+}
 
+// The Sharebox
+function wppa_share($opt = '') {
+global $wppa;
+global $wppa_opt;
+
+	if ( is_feed() ) {
+		return;
+	}
+	$do_it = false;
+	if ( $opt != 'optional' ) $do_it = true;
+	if ( ! $wppa['is_slideonly'] ) {
+		if ( $wppa_opt['wppa_share_on'] && ! $wppa['in_widget'] ) $do_it = true;
+		if ( $wppa_opt['wppa_share_on_widget'] && $wppa['in_widget'] ) $do_it = true;
+	}
+	
+	if ( $do_it ) {
+		$wppa['out'] .= wppa_nltab('+').'<div id="share-'.$wppa['master_occur'].'" class="wppa-box wppa-box-text wppa-share " style="text-align: center; '.__wcs('wppa-box').__wcs('wppa-box-text').__wcs('wppa-share').'">';
+
+		$wppa['out'] .= wppa_nltab('-').'</div><!-- #share -->';
+	}
 }
