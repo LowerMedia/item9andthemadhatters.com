@@ -1,0 +1,95 @@
+#access {
+	background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/headerbar.png");
+    height: 80px;
+    margin-top: 0;
+    position: fixed;
+    width: 930px;
+    z-index: 100;
+
+	div {
+	    margin: 0 3.5%;
+	}
+	
+	a {
+	    color: black;
+	    display: block;
+	    font-family: Rockwell,"Courier New",Courier,Georgia,serif;
+	    font-size: 16px;
+	    font-weight: bold;
+	    height: 72px;
+	    line-height: 3.333em;
+	    margin-top: 10px;
+	    text-decoration: none;
+    }
+}
+
+
+
+#nav {
+
+	ul {
+	
+		li {
+		  color: white;
+		  
+			#home {
+				background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+				background-position: -630px top;
+				background-repeat: no-repeat;
+				height: 72px;
+				width: 306px;
+			}
+		  
+			#home_current {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -630px top;
+			    height: 72px;
+			    width: 306px;
+			}
+			a#home:hover {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -630px -144px;
+			    background-repeat: no-repeat;
+			    height: 72px;
+			    width: 306px;
+    		}
+    		a#home:active {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -630px -216px;
+			    background-repeat: no-repeat;
+			    height: 72px;
+			    width: 306px;
+			 }
+			 a#about:hover {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: left -144px;
+			    background-repeat: no-repeat;
+    		}
+    		a#about:active {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: left -216px;
+			    background-repeat: no-repeat;
+			 }
+			 a#store:hover {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -90px -144px;
+			    background-repeat: no-repeat;
+			 }
+			 a#store:active {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -90px -216px;
+			    background-repeat: no-repeat;
+			 }
+			 a#photos:hover {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -180px -144px;
+			    background-repeat: no-repeat;
+			 }
+			 a#photos:active {
+			    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+			    background-position: -180px -216px;
+			    background-repeat: no-repeat;
+			 }
+		}
+	}
+}
