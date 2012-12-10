@@ -1,0 +1,383 @@
+
+body small center {
+    display: none;
+}
+body {
+    background-attachment: fixed !important;
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-iowa-city-band-rock-music.png") !important;
+    background-repeat: repeat !important;
+}
+h1 {
+}
+h2 {
+}
+h3 {
+}
+h4 {
+}
+h5 {
+}
+p {
+}
+a {
+}
+#page {
+    background-color: #EAEAEA;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    width: 930px;
+}
+#main {
+    margin-top: 70px;
+}
+#content {
+    margin: 0 !important;
+    padding-left: 40px;
+    width: 850px !important;
+}
+#content article.entry-content {
+    margin: 850px !important;
+}
+#primary-home {
+    display: inline-block;
+    width: 70%;
+}
+#secondary {
+    float: right;
+    width: 20%;
+}
+#content-home {
+    margin: 0 !important;
+    padding-left: 40px;
+    padding-right: 0;
+    width: 90% !important;
+}
+#content-home article.entry-content {
+}
+html body.home div#page.hfeed div#main div#primary-home div#content-home article#post-25.post-25 div.entry-content div#about_indpics {
+    display: none;
+}
+.padded {
+    padding-left: 40px;
+}
+.entry-title {
+    display: none;
+}
+.entry-content {
+    padding-top: 0 !important;
+}
+.entry-content h1 {
+    color: #F89A1D !important;
+    font-family: "Exo",Verdana,Geneva,sans-serif;
+    font-size: 18pt;
+    font-weight: bold;
+}
+.entry-content p {
+    color: #8C1821;
+    font-family: "Exo",Verdana,Geneva,sans-serif;
+    font-size: 17px;
+    line-height: 24px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.singular .entry-meta .edit-link a {
+    bottom: auto;
+}
+.singular.page .hentry {
+    padding: 0 !important;
+}
+#access div {
+    margin: 0 3.5%;
+}
+#access {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/headerbar.png");
+    height: 80px;
+    margin-top: 0;
+    position: fixed;
+    width: 930px;
+    z-index: 100;
+}
+#access a {
+    color: black;
+    display: block;
+    font-family: Rockwell,"Courier New",Courier,Georgia,serif;
+    font-size: 16px;
+    font-weight: bold;
+    height: 72px;
+    line-height: 3.333em;
+    margin-top: 10px;
+    text-decoration: none;
+}
+#nav ul li {
+    color: white;
+}
+#nav ul li #home {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -630px top;
+    background-repeat: no-repeat;
+    height: 72px;
+    width: 306px;
+}
+#nav ul li #home_current {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -630px top;
+    height: 72px;
+    width: 306px;
+}
+#nav ul li a#home:hover {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -630px -144px;
+    background-repeat: no-repeat;
+    height: 72px;
+    width: 306px;
+}
+#nav ul li a#home:active {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -630px -216px;
+    background-repeat: no-repeat;
+    height: 72px;
+    width: 306px;
+}
+#nav ul li a#about:hover {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: left -144px;
+    background-repeat: no-repeat;
+}
+#nav ul li a#about:active {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: left -216px;
+    background-repeat: no-repeat;
+}
+#nav ul li a#store:hover {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -90px -144px;
+    background-repeat: no-repeat;
+}
+#nav ul li a#store:active {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -90px -216px;
+    background-repeat: no-repeat;
+}
+#nav ul li a#photos:hover {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -180px -144px;
+    background-repeat: no-repeat;
+}
+#nav ul li a#photos:active {
+    background-image: url("http://item9andthemadhatters.com/wp-content/uploads/2012/03/item-9-mad-hatters-iowa-city-band-rock-music.png");
+    background-position: -180px -216px;
+    background-repeat: no-repeat;
+}
+html body.page div#page.hfeed div#main div#primary-home div#content-home article#post-33.post-33 div.entry-content div a br {
+    display: none;
+}
+#about_indpics {
+    height: 500px;
+    margin-left: -28px;
+    padding-left: 20px;
+}
+#about_indpics img {
+    height: 180px;
+}
+.about_slideshow {
+    display: block;
+    height: 500px;
+    margin-left: 36px;
+    margin-top: 36px;
+    overflow: hidden;
+    width: 860px;
+}
+.about_member {
+    display: block;
+    float: left;
+    overflow: hidden;
+    width: 180px;
+}
+#about_indpics {
+    margin-top: 36px;
+    width: 936px;
+}
+#about_info p {
+    color: #8C1821;
+    float: left;
+    font-family: "Exo",Verdana,Geneva,sans-serif;
+    font-size: 18px;
+    margin-left: 20px;
+    width: 160px;
+}
+#about_info {
+    height: 450px;
+    margin-left: 36px;
+    width: 936px;
+}
+#gigpress-2 ul {
+    padding-left: 15px;
+}
+html body.home div#page.hfeed div#main div#secondary.widget-area div#dc-social-3.dc-social div#dc_jqsocialtabs_widget-2-item.dc-social-content ul.social-tabs {
+    width: 250px;
+}
+.dc-social.static .social-tabs {
+    width: 250px;
+}
+.gce-widget-list .gce-list .gce-list-title {
+    font-size: 18px;
+}
+#social_imgs {
+    height: 150px;
+}
+#social_imgs a {
+    float: left;
+    height: 100px;
+    margin-left: 72px;
+    margin-top: 25px;
+    width: 100px;
+}
+a.wordpressLink {
+    display: none;
+}
+#contact-form-text-box {
+    margin-left: 400px;
+    margin-top: -240px;
+    width: 400px;
+}
+#contact-form-button {
+    margin-top: -60px;
+    position: absolute;
+    width: 300px;
+}
+ul.accomplishments {
+    font-size: 12px;
+}
+div.clear {
+    clear: both;
+}
+div.columnLeft {
+    display: inline-block;
+    float: left;
+    width: 59%;
+}
+div.columnLeft h1 {
+    margin: 0;
+    padding: 0;
+}
+div.columnLeft a {
+    color: red;
+    font-size: 12px;
+    text-decoration: underline;
+}
+div.columnRight {
+    display: inline-block;
+    float: left;
+    width: 39%;
+}
+.fbConnectWidgetTopmost {
+    border-style: none !important;
+}
+html#facebook body.plugin div#LikeboxPluginPagelet div.app_content_10150159521590006 div#uj8gfn_1.fbConnectWidgetTopmost {
+    border-style: none !important;
+    border-width: 0 !important;
+}
+html body.home div#page.hfeed div#main div#secondary.widget-area aside#gce_widget-2.widget div#gce_widget-2-container.gce-widget-list ul.gce-list {
+    list-style: none outside none;
+}
+.widget ul.gce-list li {
+    width: 241px;
+}
+#mc_embed_signup form {
+    padding: 0 !important;
+}
+#default_products_page_container .imagecol img, #list_view_products_page_container img, #grid_view_products_page_container img {
+    border: medium none !important;
+    margin: 0;
+    padding: 0;
+}
+.tubepress_thumbs {
+    padding: 6% !important;
+    width: 90% !important;
+}
+.gce-page-grid .gce-calendar .gce-has-events {
+    background-color: lightgreen !important;
+    color: orange !important;
+}
+.gce-change-month {
+    font-size: 60px;
+}
+.gce-list {
+    word-wrap: break-word;
+}
+html body.home div#page.hfeed div#main div#primary-home div#content-home font marquee {
+    font-size: 22px !important;
+}
+#slider {
+    height: 500px;
+    margin-bottom: 25px;
+    overflow: hidden;
+    position: relative;
+    width: 850px;
+}
+#mask-gallery {
+    overflow: hidden;
+}
+#gallery {
+    list-style: none outside none;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    width: 2550px;
+    z-index: 0;
+}
+#gallery li {
+    float: left;
+}
+#mask-excerpt {
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    width: 100px;
+    z-index: 500;
+}
+#excerpt {
+    background-color: #000000;
+    color: #FFFFFF;
+    font-family: arial;
+    font-size: 10px;
+    left: 0;
+    list-style: none outside none;
+    margin: 0;
+    opacity: 0.6;
+    overflow: hidden;
+    padding: 0;
+    top: 0;
+    width: 100px;
+    z-index: 10;
+}
+#excerpt li {
+    padding: 5px;
+}
+.clear {
+    clear: both;
+}
+#page {
+    background-color: #EAEAEA;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    width: 300px;
+}
+#primary-home {
+    display: block;
+    width: 100%;
+}
+#page {
+    background-color: #EAEAEA;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    width: 300px;
+}
+#primary-home {
+    display: block;
+    width: 100%;
+}
