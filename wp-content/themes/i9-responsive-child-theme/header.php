@@ -36,8 +36,8 @@ if ( !defined('ABSPATH')) exit;
 
 <?php 
 wp_enqueue_style('responsive-style', get_stylesheet_uri(), false, '1.8.4');
-wp_enqueue_script("js/peteJS.js");
 wp_head(); ?>
+<script type="text/javascript" src="js/peteJS.js"></script>
 </head>
 
 <body <?php body_class(); ?>>
