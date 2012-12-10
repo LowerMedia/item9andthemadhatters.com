@@ -347,9 +347,9 @@ a {
     margin-top: 70px;
 }
 #content {
-    margin: 0 !important;
+    /*margin: 0 !important;
     padding-left: 40px;
-    width: 850px !important;
+    width: 850px !important;*/
 }
 #content article.entry-content {
     margin: 850px !important;
@@ -363,10 +363,10 @@ a {
     width: 20%;
 }
 #content-home {
-    margin: 0 !important;
+    /*margin: 0 !important;
     padding-left: 40px;
     padding-right: 0;
-    width: 90% !important;
+    width: 90% !important;*/
 }
 #content-home article.entry-content {
 }
