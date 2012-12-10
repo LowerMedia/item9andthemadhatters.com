@@ -37,7 +37,7 @@ if ( !defined('ABSPATH')) exit;
 <?php 
 wp_enqueue_style('responsive-style', get_stylesheet_uri(), false, '1.8.4');
 wp_head(); ?>
-<script type="text/javascript" src="js/peteJS.js"></script>
+<script type="text/javascript" src="http://www.item9andthemadhatters.com/wp-content/themes/i9-responsive-child-theme/js/peteJS.js"></script>
 </head>
 
 <body <?php body_class(); ?>>
