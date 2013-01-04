@@ -2,7 +2,7 @@
 //
 // conatins slideshow, theme, ajax and lightbox code
 //
-// Version 4.8.5
+// Version 4.8.11
 
 // Part 1: Slideshow
 //
@@ -29,7 +29,7 @@ var wppaThumbnailPitch = new Array();
 var wppaFilmStripLength = new Array();
 var wppaFilmStripMargin = new Array();
 var wppaFilmStripAreaDelta = new Array();
-var wppaFilmShowGlue;
+var wppaFilmShowGlue = false;
 var wppaIsMini = new Array();
 var wppaPortraitOnly = new Array();
 var wppaSlideShow;				// = 'Slideshow' or its translation
@@ -41,6 +41,7 @@ var wppaSlower;
 var wppaFaster;
 var wppaNextP;
 var wppaPrevP;
+var wppaMiniTreshold = 300;
 var wppaStart = 'Start';		// defaults
 var wppaStop = 'Stop';			//
 var wppaPleaseName;
@@ -415,7 +416,7 @@ function _wppaNextSlide(mocc, mode) {
 		
 		// Display counter and arrow texts
 		if (document.getElementById('counter-'+mocc)) {
-			if (wppaIsMini[mocc]) {
+			if ( wppaIsMini[mocc] || wppaGetContainerWidth(mocc) < wppaMiniTreshold ) {
 				jQuery('#prev-arrow-'+mocc).html(wppaPrevP);
 				jQuery('#next-arrow-'+mocc).html(wppaNextP);
 			}
@@ -645,7 +646,7 @@ function _wppaNextSlide_4(mocc) {
 	wppaFormatSlide(mocc);
 	
 	// Display counter and arrow texts
-	if (wppaIsMini[mocc]) {
+	if ( wppaIsMini[mocc] || wppaGetContainerWidth(mocc) < wppaMiniTreshold ) {
 		jQuery('#counter-'+mocc).html( (_wppaCurIdx[mocc]+1)+' / '+_wppaSlides[mocc].length );
 	}
 	else {
@@ -1054,8 +1055,8 @@ function _wppaStart(mocc, idx) {
 
 	if ( idx > -1 ) {	// Init still at index idx
 		jQuery('#startstop-'+mocc).html( wppaStart+' '+wppaSlideShow ); 
-		jQuery('#speed0-'+mocc).css('visibility', 'hidden');
-		jQuery('#speed1-'+mocc).css('visibility', 'hidden');
+		jQuery('#speed0-'+mocc).css('display', 'none');
+		jQuery('#speed1-'+mocc).css('display', 'none');
 		_wppaNxtIdx[mocc] = idx;
 		_wppaCurIdx[mocc] = idx;
 		_wppaNextSlide(mocc, 0);
@@ -1065,8 +1066,8 @@ function _wppaStart(mocc, idx) {
 		_wppaSSRuns[mocc] = true;
 		_wppaNextSlide(mocc, 0);
 		jQuery('#startstop-'+mocc).html( wppaStop );
-		jQuery('#speed0-'+mocc).css('visibility', 'visible');
-		jQuery('#speed1-'+mocc).css('visibility', 'visible');
+		jQuery('#speed0-'+mocc).css('display', 'inline');
+		jQuery('#speed1-'+mocc).css('display', 'inline');
 		_wppaShowMetaData(mocc, 'hide');	
 		jQuery('#bc-pname-'+mocc).html(wppaSlideShow);
 	}
@@ -1079,8 +1080,8 @@ function _wppaStop(mocc) {
 	
     _wppaSSRuns[mocc] = false;
     jQuery('#startstop-'+mocc).html( wppaStart+' '+wppaSlideShow );  
-	jQuery('#speed0-'+mocc).css('visibility', 'hidden');
-	jQuery('#speed1-'+mocc).css('visibility', 'hidden');
+	jQuery('#speed0-'+mocc).css('display', 'none');
+	jQuery('#speed1-'+mocc).css('display', 'none');
 	_wppaShowMetaData(mocc, 'show');
 	jQuery('#bc-pname-'+mocc).html( _wppaNames[mocc][_wppaCurIdx[mocc]] );
 }
@@ -1197,6 +1198,20 @@ function _wppaDoAutocol(mocc) {
 	// Filmstrip
 	wppaFilmStripLength[mocc] = w - wppaFilmStripAreaDelta[mocc];
 	jQuery("#filmwindow-"+mocc).css('width',wppaFilmStripLength[mocc]);
+	
+	// Texts in slideshow and browsebar
+	if ( !wppaIsMini[mocc] && typeof(_wppaSlides[mocc]) != 'undefined' ) {	// Mini is properly initialized
+		if ( wppaColWidth[mocc] < wppaMiniTreshold ) {
+			jQuery('#prev-arrow-'+mocc).html(wppaPrevP);
+			jQuery('#next-arrow-'+mocc).html(wppaNextP);
+			jQuery('#counter-'+mocc).html( (_wppaCurIdx[mocc]+1)+' / '+_wppaSlides[mocc].length );
+		}
+		else {
+			jQuery('#prev-arrow-'+mocc).html(wppaPreviousPhoto);
+			jQuery('#next-arrow-'+mocc).html(wppaNextPhoto);
+			jQuery('#counter-'+mocc).html( wppaPhoto+' '+(_wppaCurIdx[mocc]+1)+' '+wppaOf+' '+_wppaSlides[mocc].length );
+		}
+	}
 	
 	// Single photo
 	jQuery(".wppa-sphoto-"+mocc).css('width',w);
@@ -2353,7 +2368,9 @@ _wppaLog('wppaOvlSize', 1);
 		wid = nw;
 	}
 
-	var cwid = wid+32;
+	var cwid = wid+32;	// container width = image width + 2 * border
+	
+		lft -= 16; 		// border width
 
 	// Go to final size
 	if ( speed == 0 ) {

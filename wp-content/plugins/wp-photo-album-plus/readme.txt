@@ -2,7 +2,7 @@
 Contributors: opajaap
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=OpaJaap@OpaJaap.nl&item_name=WP-Photo-Album-Plus&item_number=Support-Open-Source&currency_code=USD&lc=US
 Tags: photo, album, photoalbum, gallery, slideshow, sidebar widget, photowidget, photoblog, widget, qtranslate, cubepoints, multisite, network, lightbox, comment, watermark, iptc, exif, responsive, mobile
-Version: 4.8.6
+Version: 4.8.12
 Stable tag: trunk
 Author: J.N. Breetvelt
 Author URI: http://www.opajaap.nl/
@@ -68,7 +68,7 @@ However, check these requirements in case of problems with new installations wit
 * The server should have at least 32MB of memory, 64MB or more is recommended.
 
 = Upgrade notice =
-This version is: Major rev# 4, Minor rev# 8, Fix rev# 3, Hotfix rev# 000.
+This version is: Major rev# 4, Minor rev# 8, Fix rev# 11, Hotfix rev# 000.
 If you are upgrading from a previous Major or Minor version, note that:
 * If you modified wppa_theme.php and/or wppa_style.css, you will have to use the newly supplied versions. The previous versions are NOT compatible.
 * If you set the userlevel to anything else than 'administrator' you may have to set it again. Note that changing the userlevel can be done by the administrator only!
@@ -161,6 +161,63 @@ Oh, just Google on 'picture resizer' and you will find a bunch of free programs 
 == Changelog ==
 
 See for additional information: http://wppa.opajaap.nl/?page_id=1459
+
+= 4.8.12 =
+
+= Buig Fixes =
+
+* Security release
+
+= 4.8.11 =
+
+= Bug Fixes =
+
+* Fixed a problem in the pagelinks in the breadcrumb.
+
+= New Features =
+
+* New Album keyword #comten. Represents the last commented photos. Acts similar as #topten and #lasten.
+* Two settings added in Table II-A: show breadcrumb on comten displays: II-A3.2, and show pages in breadcrumb: II-A4.1.
+* You can specify to what width of the slideshow small texts must be used. 
+This is a dynamical setting i.e. the textsize changes on the fly for responsive themes. Table I-B7: Mini treshold.
+
+= 4.8.10 =
+
+= Bug Fixes =
+
+* The slideshow did not come back after adding a comment when the original slideshow came frm the comment widget. Fixed.
+
+= New Features =
+
+* The album slection box in admin pages can display the album hierarchy to facilitate locating the right album. Table IX-A12.
+
+= 4.8.9 =
+
+= Bug Fixes =
+
+* Grant an album could not be turned off. Fixed.
+
+= 4.8.8 =
+
+= Bug Fixes =
+
+* Due to recent code changes, the information on which album to be used in the sidebar slideshow was lost. Fixed.
+* The sharelink to Pinterest initially showed the wrong button icon. Fixed.
+
+= 4.8.7 =
+
+= Bug Fixes =
+
+* RSS feeds for Single image slideshows did not show an image. Fixed.
+* The ampersand character is now correctly processed in shares when it appears in the blogtitle.
+* Links now always work when the lading page contains a shortcode/script of other types than generic or landing.
+* When pretty links are enabled, spaces were removed in a searchstring. Fixed by replacing them with underscores.
+* Transparency of png images is now preserved in thumbnails.
+
+= New Features =
+
+* You can have the album description in the custom box. Add **w#albdesc** as a shortcode for the album description.
+* Added Social media share buttons for **Google+** and **Pinterest** (Table II-B21.5,6).
 
 = 4.8.6 =
 

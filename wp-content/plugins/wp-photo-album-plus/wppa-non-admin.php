@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains all the non admin stuff
-* Version 4.8.6
+* Version 4.8.8
 *
 */
 
@@ -26,19 +26,46 @@ function wppa_add_style() {
 	}
 }
 
-/* SEO META TAGS */
+/* SEO META TAGS AND SM SHARE DATA */
 add_action('wp_head', 'wppa_add_metatags');
 
 function wppa_add_metatags() {
 global $wpdb;
 global $wppa_opt;
+global $thumb;
+
+	// If a photo is given in the querystring, it may be a sm examinig the site for a share, do not supply metatags
+	if ( wppa_get_get('photo') ) {
+		// Share info for sm that uses og
+		$id = wppa_get_get('photo');
+		if ( is_numeric($id) ) {
+			wppa_cache_thumb($id);
+			if ( $thumb ) {
+				$title  = __(stripslashes($thumb['name']));
+				$imgurl = WPPA_UPLOAD_URL.'/thumbs/'.$id.'.'.$thumb['ext'];
+				$desc   = sprintf(__a('See this image on %s', 'wppa_theme'), str_replace('&amp;', __a('and', 'wppa_theme'), get_bloginfo('name')));
+				$pdesc  = wppa_strip_tags(wppa_html(__(stripslashes($thumb['description']))), 'all');
+				$url    = wppa_convert_to_pretty(str_replace('&amp;', '&', wppa_get_image_page_url_by_id($thumb['id'], $wppa_opt['wppa_share_single_image'])));
+				$site   = get_bloginfo('name');
+				if ( $pdesc ) $desc .= ': '.$pdesc;
+				echo "\n<!-- WPPA+ Share data -->".'
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content="'.esc_attr($url).'" />
+	<meta property="og:site_name" content="'.esc_attr($site).'" />
+	<meta property="og:title" content="'.esc_attr($title).'" />
+	<meta property="og:image" content="'.esc_attr($imgurl).'" />
+	<meta property="og:description" content="'.esc_attr($desc).'" />';				
+				echo "\n<!-- WPPA+ End Share data -->\n";
+			}
+		}
+	}
 
 	// To make sure we are on a page that contains at least %%wppa%% we check for $_GET['wppa-album']. 
 	// This also narrows the selection of featured photos to those that exist in the current album.
-	if ( isset($_GET['wppa-album']) ) {
+	elseif ( wppa_get_get('album') ) {
 		if ( $wppa_opt['wppa_meta_page'] ) {
-			$album = $_GET['wppa-album'];
-			$photos = $wpdb->get_results($wpdb->prepare( "SELECT id, name FROM `".WPPA_PHOTOS."` WHERE `album` = %s AND `status` = 'featured'", $album ), ARRAY_A);
+			$album = wppa_get_get('album');
+			$photos = $wpdb->get_results($wpdb->prepare( "SELECT `id`, `name` FROM `".WPPA_PHOTOS."` WHERE `album` = %s AND `status` = 'featured'", $album ), ARRAY_A);
 			if ( $photos ) {
 				echo("\n<!-- WPPA+ BEGIN Featured photos on this page -->");
 				foreach ( $photos as $photo ) {
@@ -52,7 +79,8 @@ global $wppa_opt;
 			}
 		}
 	}
-	// No album, give the plain photo links of all featured photos
+	
+	// No photo and no album, give the plain photo links of all featured photos
 	elseif ( $wppa_opt['wppa_meta_all'] ) {
 		$photos = $wpdb->get_results( "SELECT `id`, `name`, `ext` FROM `".WPPA_PHOTOS."` WHERE `status` = 'featured'", ARRAY_A);
 		if ( $photos ) {
@@ -65,21 +93,6 @@ global $wppa_opt;
 				echo("\n<meta name=\"".$name."\" content=\"".$content."\" >");
 			}
 			echo("\n<!-- WPPA+ END Featured photos on this site -->\n");
-		}
-	}
-	
-	// Share thumbnail, I do not believe in this, but.. you never know, maybe it works somewhere
-	if ( isset($_GET['wppa-photo']) ) {
-		$id = $_GET['wppa-photo'];
-		if ( is_numeric($id) ) {
-			$photo = $wpdb->get_row($wpdb->prepare( "SELECT * FROM `".WPPA_PHOTOS."` WHERE `id` = %s ", $id ), ARRAY_A);
-			if ( $photo ) {
-				$imgurl = WPPA_UPLOAD_URL.'/thumbs/'.$id.'.'.$photo['ext'];
-				echo ("\n<!-- WPPA+ Share thumbnail data -->\n");
-				echo ("\n".'<link rel="image_src" href="'.$imgurl.'" />');
-				echo ("\n".'<meta property="og:image" content="'.$imgurl.'" />');
-				echo ("\n<!-- WPPA+ End Share thumbnail data -->\n");
-			}
 		}
 	}
 }
@@ -160,7 +173,6 @@ global $wppa_opt;
 	}
 }
 
-
 /* CHECK REDIRECTION */
 add_action('init', 'wppa_redirect');
 
@@ -195,30 +207,33 @@ global $wppa_locale;
 			echo("\t"."if (typeof(jQuery) == 'undefined') alert('There is a problem with your theme. The jQuery library is not loaded when it is expected (Errloc = wppa_kickoff).');");
 		}
 		/* This goes into wppa.js */ 
-		echo("\t".'wppaBackgroundColorImage = "'.$wppa_opt['wppa_bgcolor_img'].'";'."\n");
-		echo("\t".'wppaPopupLinkType = "'.$wppa_opt['wppa_thumb_linktype'].'";'."\n");
-		if ($wppa_opt['wppa_animation_type']) echo("\t".'wppaAnimationType = "'.$wppa_opt['wppa_animation_type'].'";'."\n");
-		echo("\t".'wppaAnimationSpeed = '.$wppa_opt['wppa_animation_speed'].';'."\n");
-		echo("\t".'wppaImageDirectory = "'.wppa_get_imgdir().'";'."\n");
-		echo("\t".'wppaThumbnailAreaDelta = '.wppa_get_thumbnail_area_delta().';'."\n");
-		echo("\t".'wppaTextFrameDelta = '.wppa_get_textframe_delta().';'."\n");
-		echo("\t".'wppaBoxDelta = '.wppa_get_box_delta().';'."\n");
-		echo("\t".'wppaSlideShowTimeOut = '.$wppa_opt['wppa_slideshow_timeout'].';'."\n");		
-		echo("\t".'wppaPreambule = '.wppa_get_preambule().';'."\n");
-		if ($wppa_opt['wppa_film_show_glue'] == 'yes') echo("\t".'wppaFilmShowGlue = true;'."\n");
-		else echo("\t".'wppaFilmShowGlue = false;'."\n");
-		echo("\t".'wppaSlideShow = "'.__a('Slideshow', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaStart = "'.__a('Start', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaStop = "'.__a('Stop', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaSlower = "'.__a('Slower', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaFaster = "'.__a('Faster', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaPhoto = "'.__a('Photo', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaOf = "'.__a('of', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaPreviousPhoto = "'.__a('Previous photo', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaNextPhoto = "'.__a('Next photo', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaPrevP = "'.__a('Prev.', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaNextP = "'.__a('Next', 'wppa_theme').'";'."\n");
-		echo("\t".'wppaUserName = "'.wppa_get_user().'";'."\n");
+		echo '
+	wppaBackgroundColorImage = "'.$wppa_opt['wppa_bgcolor_img'].'";
+	wppaPopupLinkType = "'.$wppa_opt['wppa_thumb_linktype'].'";
+	wppaAnimationType = "'.$wppa_opt['wppa_animation_type'].'";
+	wppaAnimationSpeed = '.$wppa_opt['wppa_animation_speed'].';
+	wppaImageDirectory = "'.wppa_get_imgdir().'";
+	wppaThumbnailAreaDelta = '.wppa_get_thumbnail_area_delta().';
+	wppaTextFrameDelta = '.wppa_get_textframe_delta().';
+	wppaBoxDelta = '.wppa_get_box_delta().';
+	wppaSlideShowTimeOut = '.$wppa_opt['wppa_slideshow_timeout'].';
+	wppaPreambule = '.wppa_get_preambule().';';
+		if ($wppa_opt['wppa_film_show_glue'] == 'yes') echo '
+	wppaFilmShowGlue = true;';
+	echo '
+	wppaSlideShow = "'.__a('Slideshow', 'wppa_theme').'";
+	wppaStart = "'.__a('Start', 'wppa_theme').'";
+	wppaStop = "'.__a('Stop', 'wppa_theme').'";
+	wppaSlower = "'.__a('Slower', 'wppa_theme').'";
+	wppaFaster = "'.__a('Faster', 'wppa_theme').'";
+	wppaPhoto = "'.__a('Photo', 'wppa_theme').'";
+	wppaOf = "'.__a('of', 'wppa_theme').'";
+	wppaPreviousPhoto = "'.__a('Previous photo', 'wppa_theme').'";
+	wppaNextPhoto = "'.__a('Next photo', 'wppa_theme').'";
+	wppaPrevP = "'.__a('Prev.', 'wppa_theme').'";
+	wppaNextP = "'.__a('Next', 'wppa_theme').'";
+	wppaMiniTreshold = '.$wppa_opt['wppa_mini_treshold'].';';
+		echo("\n\t".'wppaUserName = "'.wppa_get_user().'";'."\n");
 		if ($wppa_opt['wppa_rating_change'] || $wppa_opt['wppa_rating_multi']) echo("\t".'wppaRatingOnce = false;'."\n");
 		else echo("\t".'wppaRatingOnce = true;'."\n");
 		echo("\t".'wppaPleaseName = "'.__a('Please enter your name', 'wppa_theme').'";'."\n");
@@ -287,7 +302,14 @@ global $wppa_locale;
 
 	echo("/* ]]> */\n");
 	echo("</script>\n");
-	
+
+	// Pinterest js
+	if ( ( $wppa_opt['wppa_share_on'] || $wppa_opt['wppa_share_on_widget'] ) && $wppa_opt['wppa_share_pinterest'] ) {
+		echo("\n<!-- WPPA+ Pinterest share -->\n");
+		echo('<script type="text/javascript" src="//assets.pinterest.com/js/pinit.js"></script>');
+		echo("\n<!-- end WPPA+ Pinterest share -->\n");
+	}
+
 	$wppa['rendering_enabled'] = true;
 	echo("\n<!-- WPPA+ Rendering enabled -->\n");
 	if ($wppa['debug']) {

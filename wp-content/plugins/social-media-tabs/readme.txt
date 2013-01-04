@@ -3,8 +3,8 @@ Contributors: remix4
 Donate link: http://www.designchemical.com/blog/index.php/wordpress-plugins/wordpress-plugin-social-media-tabs/#form-donate
 Tags: social media, facebook, twitter, tweets, google+1, flickr, YouTube, pinterest, rss, profile, tabs, social networks, bookmarks, buttons, animated, jquery, flyout, sliding
 Requires at least: 3.0
-Tested up to: 3.4.2
-Stable tag: 1.4.3
+Tested up to: 3.5
+Stable tag: 1.4.4
 
 Social media tabs allows you to add facebook, google +1, twitter, flickr, pinterest, YouTube subscription and RSS profiles and feeds to any widget area with stylish sliding tabs. Option also to have the tabs slide out from the side of the browsers.
 
@@ -105,6 +105,9 @@ Each individual form can be customised via the widget control panel:
 2. Example of tabs showing facebook widget
 
 == Changelog ==
+
+= 1.4.4 = 
+* Edit: Change hook for jquery to wp_enqueue_scripts
 
 = 1.4.3 = 
 * Add: Code to reload jquery plugins if overwritten

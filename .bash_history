@@ -204,3 +204,14 @@ git add .
 git push -u
 git commit -m "adding new posts, old changes"
 git push -u
+ls
+git status
+git add .
+git commit
+git commit -m "updates"
+git push -u origin
+git pull -u
+ls
+git pull -u
+ls
+git pull -u

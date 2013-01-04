@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains low-level utility routines
-* Version 4.8.5
+* Version 4.8.10
 *
 */
 
@@ -125,7 +125,9 @@ global $album;
 function wppa_get_album_name($id, $extended = false) {
 global $wpdb;
 global $album;
-    
+
+    $name = '';
+	
 	if ( $extended ) {
 		if ( $id == '0' ) {
 			$name = is_admin() ? __('--- none ---', 'wppa') : __a('--- none ---', 'wppa_theme');
@@ -194,4 +196,9 @@ global $thumb;
 	}
 	else $result = '';
 	return $result;
+}
+
+function wppa_switch($key) {
+global $wppa_opt;
+	return $wppa_opt[$key] === true || $wppa_opt[$key] == 'yes';
 }
