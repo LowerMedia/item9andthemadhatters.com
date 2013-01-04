@@ -96,7 +96,7 @@ wp_head(); ?>
  
     </div><!-- end of #header -->
     <?php responsive_header_end(); // after header hook ?>
-    
+    <?php if (function_exists("easing_slider")){ easing_slider(); }; ?>
 	<?php responsive_wrapper(); // before wrapper ?>
     <div id="wrapper" class="clearfix">
     <?php responsive_in_wrapper(); // wrapper hook ?>
