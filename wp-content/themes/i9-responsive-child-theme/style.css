@@ -39,6 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------- */
 
 
+.home #wrapper {
+	margin-top: 0px;
+}
 
 body.home div#content {
 	background-color: #f9f9f9;
