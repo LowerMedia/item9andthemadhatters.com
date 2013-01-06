@@ -624,6 +624,7 @@ html body.home div#page.hfeed div#main div#primary-home div#content-home font ma
 .menu a:hover {
     background-color: #808080;
     background-image: -moz-linear-gradient(center top , #C80808, #363636);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#C80808), to(#363636));
     color: #FFFFFF;
 }
 
