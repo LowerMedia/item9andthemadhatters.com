@@ -215,3 +215,26 @@ ls
 git pull -u
 ls
 git pull -u
+ls
+git status
+git pull -u
+git status
+git commit -a
+ls
+git status
+git pull -u
+ls
+git diff
+ls
+git reset --hard HEAD
+ls
+git status
+git pull -u
+git checkout HEAD^ wp-content/themes/i9-responsive-child-theme/home.php 
+git status
+git pull -u
+git commit -m "
+using old home.php"
+git pull -u
+ls
+git pull -u
