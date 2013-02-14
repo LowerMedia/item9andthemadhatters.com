@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * Contains all the setup stuff
-* Version 4.8.11
+* Version 4.9.4
 *
 */
 
@@ -16,11 +16,11 @@
 // we still do a setup on activation by faking that we are not up yo rev, and so invoking
 // the setup on the first admin_init event. This has the advantage that we can display messages
 // instead of characters of unexpected output.
-// register_activation_hook(WPPA_FILE, 'wppa_activate'); is in wppa.php
-function wppa_activate() {
+// register_activation_hook(WPPA_FILE, 'wppa_activate_plugin'); is in wppa.php
+function wppa_activate_plugin() {
 	$old_rev = get_option('wppa_revision', '100');
 	$new_rev = $old_rev - '0.01';
-	update_option('wppa_revision', $new_rev);
+	wppa_update_option('wppa_revision', $new_rev);
 }
 // Set force to true to re-run it even when on rev (happens in wppa-settings.php)
 // Force will NOT redefine constants
@@ -52,6 +52,7 @@ global $silent;
 					owner text NOT NULL,
 					timestamp tinytext NOT NULL,
 					upload_limit tinytext NOT NULL,
+					alt_thumbsize tinytext NOT NULL,
 					PRIMARY KEY  (id) 
 					) DEFAULT CHARACTER SET utf8;";
 					
@@ -70,6 +71,7 @@ global $silent;
 					timestamp tinytext NOT NULL,
 					status tinytext NOT NULL,
 					rating_count bigint(20) NOT NULL default '0',
+					tags tinytext NOT NULL,
 					PRIMARY KEY  (id) 
 					) DEFAULT CHARACTER SET utf8;";
 
@@ -231,11 +233,11 @@ global $silent;
 		if ( $old_rev <= '482' ) {	// Share box added
 			$so = get_option('wppa_slide_order', '0,1,2,3,4,5,6,7,8,9');
 			if ( strlen($so) == '19' ) {
-				update_option('wppa_slide_order', $so.',10');
+				wppa_update_option('wppa_slide_order', $so.',10');
 			}
 			$so = get_option('wppa_slide_order_split', '0,1,2,3,4,5,6,7,8,9,10');
 			if ( strlen($so) == '22' ) {
-				update_option('wppa_slide_order_split', $so.',11');
+				wppa_update_option('wppa_slide_order_split', $so.',11');
 			}
 			wppa_remove_setting('wppa_sharetype');
 			wppa_copy_setting('wppa_bgcolor_namedesc', 'wppa_bgcolor_share');
@@ -268,12 +270,12 @@ global $silent;
 	// Check if this update comes with a new wppa-theme.php and/or a new wppa-style.css
 	// If so, produce message
 	$key = '0';
-	if ( $old_rev < '480' ) {		// theme changed since...
+	if ( $old_rev < '4903' ) {		// theme changed since...
 		$usertheme_old 	= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa_theme.php';
 		$usertheme 		= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa-theme.php';
 		if ( is_file( $usertheme ) || is_file( $usertheme_old ) ) $key += '2';
 	}
-	if ( $old_rev < '480' ) {		// css changed since...
+	if ( $old_rev < '4902' ) {		// css changed since...
 		$userstyle_old 	= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa_style.css';
 		$userstyle 		= ABSPATH.'wp-content/themes/'.get_option('template').'/wppa-style.css';
 		if ( is_file( $userstyle ) || is_file( $userstyle_old ) ) $key += '1';
@@ -292,9 +294,9 @@ global $silent;
 	if ( ! $wppa['error'] ) {
 		$old_rev = round($old_rev); // might be 0.01 off
 		if ( $old_rev < $wppa_revno ) { 	// was a real upgrade,
-			update_option('wppa_prevrev', $old_rev);	// Remember prev rev. For support purposes. They say they stay up to rev, but they come from stoneage...
+			wppa_update_option('wppa_prevrev', $old_rev);	// Remember prev rev. For support purposes. They say they stay up to rev, but they come from stoneage...
 		}
-		update_option('wppa_revision', $wppa_revno);	
+		wppa_update_option('wppa_revision', $wppa_revno);	
 		if ( WPPA_DEBUG ) {
 			if ( is_multisite() ) {
 				wppa_ok_message(sprintf(__('WPPA+ successfully updated in multi site mode to db version %s.', 'wppa'), $wppa_revno));
@@ -315,22 +317,22 @@ global $wppa;
 }
 function wppa_convert_setting($oldname, $oldvalue, $newname, $newvalue) {
 	if ( get_option($oldname, 'nil') == 'nil' ) return;	// no longer exists
-	if ( get_option($oldname, 'nil') == $oldvalue ) update_option($newname, $newvalue);
+	if ( get_option($oldname, 'nil') == $oldvalue ) wppa_update_option($newname, $newvalue);
 }
 function wppa_remove_setting($oldname) {
 	if ( get_option($oldname, 'nil') != 'nil' ) delete_option($oldname);
 }
 function wppa_rename_setting($oldname, $newname) {
 	if ( get_option($oldname, 'nil') == 'nil' ) return;	// no longer exists
-	update_option($newname, get_option($oldname));
+	wppa_update_option($newname, get_option($oldname));
 	delete_option($oldname);
 }
 function wppa_copy_setting($oldname, $newname) {
 	if ( get_option($oldname, 'nil') == 'nil' ) return;	// no longer exists
-	update_option($newname, get_option($oldname));
+	wppa_update_option($newname, get_option($oldname));
 }
 function wppa_revalue_setting($oldname, $oldvalue, $newvalue) {
-	if ( get_option($oldname, 'nil') == $oldvalue ) update_option($oldname, $newvalue);
+	if ( get_option($oldname, 'nil') == $oldvalue ) wppa_update_option($oldname, $newvalue);
 }
 
 // Set default option values if the option does not exist.
@@ -389,9 +391,12 @@ Hide Camera info
 						'wppa_mini_treshold'			=> '300',
 						// C Thumbnails
 						'wppa_thumbsize' 				=> '100',		// 1
+						'wppa_thumbsize_alt'			=> '130',		// 1a
 						'wppa_thumb_aspect'				=> '0:0:none',	// 2
 						'wppa_tf_width' 				=> '100',		// 3
-						'wppa_tf_height' 				=> '130',		// 4
+						'wppa_tf_width_alt'				=> '130',		// 3a
+						'wppa_tf_height' 				=> '150',		// 4
+						'wppa_tf_height_alt'			=> '180',		// 4a
 						'wppa_tn_margin' 				=> '4',			// 5
 						'wppa_thumb_auto' 				=> 'yes',		// 6
 						'wppa_thumb_page_size' 			=> '0',			// 7
@@ -430,6 +435,7 @@ Hide Camera info
 						'wppa_bc_on_topten'					=> 'yes',	// 3
 						'wppa_bc_on_lasten'					=> 'yes',	// 3
 						'wppa_bc_on_comten'					=> 'yes',	// 3
+						'wppa_bc_on_tag'					=> 'yes',	// 3
 						'wppa_show_home' 					=> 'yes',	// 4
 						'wppa_show_page' 					=> 'yes',	// 4
 						'wppa_bc_separator' 				=> 'raquo',	// 5
@@ -445,6 +451,7 @@ Hide Camera info
 						'wppa_show_full_desc' 				=> 'yes',		// 6
 						'wppa_hide_when_empty'				=> 'no',		// 6.1
 						'wppa_rating_on' 					=> 'yes',		// 7
+						'wppa_dislike_mail_every'			=> '5', 		// 7.1
 						'wppa_rating_display_type'			=> 'graphic',	// 8
 						'wppa_show_avg_rating'				=> 'yes',		// 9
 						'wppa_show_comments' 				=> 'yes',		// 10
@@ -476,6 +483,7 @@ Hide Camera info
 						'wppa_popup_text_desc' 				=> 'yes',	// 5
 						'wppa_popup_text_desc_strip'		=> 'no',	// 5.1
 						'wppa_popup_text_rating' 			=> 'yes',	// 6
+						'wppa_popup_text_ncomments'			=> 'yes', 	//
 						'wppa_show_rating_count'			=> 'no',	// 7
 						'wppa_albdesc_on_thumbarea'			=> 'none',
 						// D Covers
@@ -686,11 +694,18 @@ Hide Camera info
 						
 						'wppa_art_monkey_link'				=> 'none',
 						'wppa_art_monkey_popup_link'		=> 'file',
-/* Niew */
+
 						'wppa_album_widget_linktype'		=> 'content',
 						'wppa_album_widget_linkpage'		=> '0',
 						'wppa_album_widget_blank'			=> 'no',
-/* end nieuw */
+
+						'wppa_tagcloud_linktype'			=> 'album',
+						'wppa_tagcloud_linkpage'			=> '0',
+						'wppa_tagcloud_blank'				=> 'no',
+
+						'wppa_multitag_linktype'			=> 'album',
+						'wppa_multitag_linkpage'			=> '0',
+						'wppa_multitag_blank'				=> 'no',
 						
 						// Table VII: Security
 						// B
@@ -698,6 +713,7 @@ Hide Camera info
 						'wppa_owner_only' 			=> 'no',
 						'wppa_user_upload_on'		=> 'no',
 						'wppa_upload_moderate'		=> 'no',
+						'wppa_upload_notify' 		=> 'no',
 						'wppa_memcheck_frontend'	=> 'yes',
 						'wppa_memcheck_admin'		=> 'yes',
 						'wppa_comment_captcha'		=> 'no',
@@ -762,6 +778,7 @@ Hide Camera info
 						// F Other plugins
 						'wppa_cp_points_comment'		=> '0',
 						'wppa_cp_points_rating'			=> '0',
+						'wppa_cp_points_upload'			=> '0',
 
 						// Photo of the day widget
 						'wppa_widgettitle'			=> __('Photo of the day', 'wppa'),
@@ -799,7 +816,7 @@ Hide Camera info
 	array_walk($wppa_defaults, 'wppa_set_default', $force);
 	
 	// Check for upgrade right after conversion from old wppa
-	if ( ! is_numeric(get_option('wppa_fullsize')) ) update_option('wppa_fullsize', '640');
+	if ( ! is_numeric(get_option('wppa_fullsize')) ) wppa_update_option('wppa_fullsize', '640');
 	
 	return true;
 }
@@ -810,10 +827,10 @@ function wppa_set_default($value, $key, $force) {
 		);
 							
 	if ( $force ) {
-		if ( ! in_array($key, $void_these) ) update_option($key, $value);
+		if ( ! in_array($key, $void_these) ) wppa_update_option($key, $value);
 	}
 	else {
-		if ( get_option($key, 'nil') == 'nil' ) update_option($key, $value);
+		if ( get_option($key, 'nil') == 'nil' ) wppa_update_option($key, $value);
 	}
 }
 

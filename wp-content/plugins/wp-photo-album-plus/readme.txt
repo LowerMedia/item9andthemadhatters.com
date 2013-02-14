@@ -2,11 +2,11 @@
 Contributors: opajaap
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=OpaJaap@OpaJaap.nl&item_name=WP-Photo-Album-Plus&item_number=Support-Open-Source&currency_code=USD&lc=US
 Tags: photo, album, photoalbum, gallery, slideshow, sidebar widget, photowidget, photoblog, widget, qtranslate, cubepoints, multisite, network, lightbox, comment, watermark, iptc, exif, responsive, mobile
-Version: 4.8.12
+Version: 4.9.6
 Stable tag: trunk
 Author: J.N. Breetvelt
 Author URI: http://www.opajaap.nl/
-Requires at least: 3.0
+Requires at least: 3.1
 Tested up to: 3.5
 
 This plugin is designed to easily manage and display your photo albums and slideshows in a single as well as in a network WordPress site.
@@ -35,6 +35,7 @@ This plugin is designed to easily manage and display your photo albums and slide
 * There is a General Purpose widget that is a text widget wherein you can use wppa+ script commands.
 * There is an album widget that displays thumbnail images that link to album contents.
 * There is a QR code widget that will be updated when the content of the page changes.
+* There is a tag cloud widget and a multi tag widget to quickly get a selection of photos with (a) certain tag(s).
 * Almost all appearance settings can be done in the settings admin page. No php, html or css knowledge is required to customize the appearence of the photo display.
 * International language support for static text: Currently included foreign languages files: Dutch, Japanese, French(outdated), Spanish, German.
 * International language support for dynamic text: Album and photo names and descriptions fully support the qTranslate multilanguage rules.
@@ -55,20 +56,28 @@ You can find the plugin admin section under Menu Photo Albums on the admin scree
 * Sidebar Widget: To specify the behaviour for an optional sidebar photo of the day widget.
 * Help & Info: Much information about how to...
 
+Translations:
+
+There are translations in many languages. The frontend and admin sides are separately translatable. 
+* Dutch translation by OpaJaap himself (<a href="http://www.opajaap.nl">Opa Jaap's Weblog</a>) (both)
+* Slovak translation by Branco Radenovich (<a href="http://webhostinggeeks.com/user-reviews/">WebHostingGeeks.com</a>) (frontend)
+* Polish translation by Maciej Matysiak (both)
+
 == Installation ==
 
 = Requirements =
 
-* The plugin requires at least wp version 3.0.
+* The plugin requires at least wp version 3.1.
 * The theme should have a call to wp_head() in its header.php file and wp_footer() in its footer.php file. 
 * The theme should load enqueued scripts in the header if the scripts are enqueued without the $in_footer switch (like wppa.js and jQuery). 
 * The theme should not prevent this plugin from loading the jQuery library in its default wp manner, i.e. the library jQuery in safe mode (uses jQuery() and not $()). 
+* The theme should not use remove_action() or remove_all_actions() when it affects actions added by wppa+.
 Most themes comply with these requirements. 
 However, check these requirements in case of problems with new installations with themes you never had used before with wppa+ or when you modifies your theme.
 * The server should have at least 32MB of memory, 64MB or more is recommended.
 
 = Upgrade notice =
-This version is: Major rev# 4, Minor rev# 8, Fix rev# 11, Hotfix rev# 000.
+This version is: Major rev# 4, Minor rev# 9, Fix rev# 6, Hotfix rev# 000.
 If you are upgrading from a previous Major or Minor version, note that:
 * If you modified wppa_theme.php and/or wppa_style.css, you will have to use the newly supplied versions. The previous versions are NOT compatible.
 * If you set the userlevel to anything else than 'administrator' you may have to set it again. Note that changing the userlevel can be done by the administrator only!
@@ -162,9 +171,118 @@ Oh, just Google on 'picture resizer' and you will find a bunch of free programs 
 
 See for additional information: http://wppa.opajaap.nl/?page_id=1459
 
+= 4.9.6 =
+
+= Bug Fixes =
+
+* Zooming out in the browser while the albums are displayed in more than one column corrupts the display. Fixed.
+* On some installations it was no longer possible to create new albums. Fixed now also for Grant an Album.
+
+= 4.9.5 =
+
+= Bug Fixes =
+
+* On some installations it was no longer possible to create new albums. Fixed.
+
+= Other Changes =
+
+* Cosmetic changes to notification emails
+* Language files updates and new languages
+
+= 4.9.4 =
+
+= Bug Fixes =
+
+* Cube points frontend upload was calculated wrong. Fixed.
+* Fixed (removed) CR for proper utf8 encoding of email notifications.
+* The texts *Average rating* and *My rating* now also have shorthands for small container widths.
+
+= New Features =
+
+* There is a red cross in the rating bar. Clicking will register a 'dislike'. 
+After a certain 'dislikes' by different users, admin will receive a notification email.
+This feature is configurable in Table II-B7.1. Entering 0 will disble this feature. Default is 5.
+* You can display the number of comments on the popup image ( Table II-C6.1 )
+* You can specify that admin receives a notification by email at a frontend photo upload. ( Table VII-B3.0 ).
+
+= Other Changes =
+
+* On entering the Settings page, a check is done if the selected linkpages still exist.
+* Cosmetic changes to email notifications.
+
+= 4.9.3 =
+
+= Bug Fixes =
+
+* Fixed a few translatable sentences.
+* Fixed a few cosmetic and security issues around multitags and empty slideshows.
+* Fixed a pagination problem with multitag thumbnail results.
+
+= Other Changes =
+
+* Added header data in notification emails for charset utf-8
+* Added Polish language files, updated others.
+
+= 4.9.2 =
+
+= Bug Fixes =
+
+* When the selection in a slideshow is #all ( all photos ), 
+refreshing the page or returning from voting or commenting resulted in a slideshow with the photos of the photos album only. Fixed.
+* The input to the Search Widget is now properly filterd to prevent cross-site scripting attacks.
+
+= New Features =
+
+* There is a new linktype from thumbnails ( generic thumbnails, tumbnail-, lasten-, topten- and comten-widget thumbnails ) to <i>the single photo in the style of a slideshow</i>.
+* There is a new widget: <strong>Photo Tags Filter</strong> that allows the visitor to select photos having more than one tags at the same time.
+
+= 4.9.1 =
+
+= Bug Fixes = 
+
+* Admin will have the Edit link now always in the fullsize photo description.
+* Fixed breadcrumb bug preventing the display of album=#all contents.
+
+= New Features =
+
+* Cube Points added for frontend uploads (Table IX-F3).
+
+= Other Changes =
+
+* The supply of an album id that does not exist will always produce an errormessage rather than processing the default generic album.
+* Orphan albums will automaticly have the parent set to --- separate --- on entering the album admin page.
+* Cover linkpage will automaticly be reset to --- same page or post --- when the page is moved to trash on entering the album admin page.
+
+= 4.9.0 =
+
+= Bug Fixes =
+
+* The filmstrip content is now adjusted when the size of the container changes.
+* Fixed an admin hang when there was a deleted parentalbum and Table IX-A12 was checked.
+
+= New Features =
+
+* Tags on photos. See Album admin -> Manage photos: input field and selection box, <b>Photo Tag Cloud</b> widget and settings: Table II-A3.3, Table VI-C3.
+* There is a button on the album admin -> manage album information screen to go to the upload page directly if the user has the rights to do so.
+* If Table IX-B3 is set: There is a button on the album admin -> manage album information screen to set all photo descriptions 
+to the New photo description as set in Table IX-B4.
+* You can specify an alternative thumbnail size on a per album basis. Size settings are in Table I-C1a,3a,4a.
+* If you are logged in and are the owner of the photo ( or admin ) and have album admin rights, 
+there will be an Edit link in the fullsize photo description that allows you to edit the photo information directly.
+
+= Other Changes =
+
+* The album selection in the shortcode generator now also respects the hiërarchical display setting in Table IX-A12.
+* Changing the status of a comment in the comment admin page is Ajaxified and no longer requires pressing the Save Changes button.
+* Changed treatment of missing IPTC and EXIF data. 
+In the IPTC and EXIF boxes: if the status is set to *optional* in Table X and XI, the itemlines will be omitted.
+In the photo description the missing tag values will no longer show the tag but will be replaced by <b>n.a.</b>.
+* The option settings are 'cached' into a single option to improve initialisation performance.
+* The HTML tags in album and photo desciptions will be balanced prior to displaying, regardless of the setting in <strong>Table IX-A2</strong></li>.
+
 = 4.8.12 =
 
-= Buig Fixes =
+= Bug Fixes =
 
 * Security release
 

@@ -1,33 +1,105 @@
-<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="http://item9andthemadhatters.com/wp-content/plugins/google-sitemap-generator/sitemap.xsl"?><!-- generator="wordpress/3.3.2" -->
-<!-- sitemap-generator-url="http://www.arnebrachhold.de" sitemap-generator-version="3.2.7" -->
-<!-- generated-on="June 14, 2012 10:56 pm" -->
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="http://item9andthemadhatters.com/wp-content/plugins/google-sitemap-generator/sitemap.xsl"?><!-- generator="wordpress/3.5.1" -->
+<!-- sitemap-generator-url="http://www.arnebrachhold.de" sitemap-generator-version="3.2.9" -->
+<!-- generated-on="February 6, 2013 9:16 pm" -->
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">	<url>
 		<loc>http://item9andthemadhatters.com/</loc>
-		<lastmod>2012-06-14T22:54:55+00:00</lastmod>
+		<lastmod>2013-01-29T19:27:13+00:00</lastmod>
 		<changefreq>daily</changefreq>
 		<priority>1.0</priority>
 	</url>
 	<url>
 		<loc>http://item9andthemadhatters.com/list-of-shows/</loc>
-		<lastmod>2012-06-05T15:55:13+00:00</lastmod>
-		<changefreq>weekly</changefreq>
-		<priority>0.2</priority>
-	</url>
-	<url>
-		<loc>http://item9andthemadhatters.com/music-iowa-city-rock/</loc>
-		<lastmod>2012-06-05T14:28:52+00:00</lastmod>
-		<changefreq>weekly</changefreq>
-		<priority>0.2</priority>
-	</url>
-	<url>
-		<loc>http://item9andthemadhatters.com/free-rock-music-download/</loc>
-		<lastmod>2012-05-18T17:22:49+00:00</lastmod>
+		<lastmod>2013-02-05T18:54:36+00:00</lastmod>
 		<changefreq>weekly</changefreq>
 		<priority>0.2</priority>
 	</url>
 	<url>
 		<loc>http://item9andthemadhatters.com/the-band/</loc>
-		<lastmod>2012-05-18T16:52:48+00:00</lastmod>
+		<lastmod>2013-01-10T18:34:44+00:00</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/music-iowa-city-rock/</loc>
+		<lastmod>2013-01-07T19:05:32+00:00</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/press/</loc>
+		<lastmod>2013-01-06T15:49:02+00:00</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/live/</loc>
+		<lastmod>2012-12-14T15:01:08+00:00</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/contact/</loc>
+		<lastmod>2012-12-10T17:45:51+00:00</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/test-slider-page/</loc>
+		<lastmod>2012-12-10T16:09:15+00:00</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-11/</loc>
+		<lastmod>2012-11-14T18:11:58+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-9-10/</loc>
+		<lastmod>2012-11-14T17:00:18+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-2/</loc>
+		<lastmod>2012-11-04T20:03:31+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-3/</loc>
+		<lastmod>2012-11-04T20:02:18+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-4/</loc>
+		<lastmod>2012-11-04T20:01:00+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-5-7/</loc>
+		<lastmod>2012-11-04T20:00:31+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-1/</loc>
+		<lastmod>2012-11-04T19:58:43+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/item-9-tour-day-8/</loc>
+		<lastmod>2012-11-04T19:56:22+00:00</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.2</priority>
+	</url>
+	<url>
+		<loc>http://item9andthemadhatters.com/free-rock-music-download/</loc>
+		<lastmod>2012-06-29T13:34:09+00:00</lastmod>
 		<changefreq>weekly</changefreq>
 		<priority>0.2</priority>
 	</url>
@@ -56,12 +128,6 @@
 		<priority>0.2</priority>
 	</url>
 	<url>
-		<loc>http://item9andthemadhatters.com/press/</loc>
-		<lastmod>2012-05-18T15:45:34+00:00</lastmod>
-		<changefreq>weekly</changefreq>
-		<priority>0.2</priority>
-	</url>
-	<url>
 		<loc>http://item9andthemadhatters.com/calendar/</loc>
 		<lastmod>2012-05-15T18:55:27+00:00</lastmod>
 		<changefreq>weekly</changefreq>
@@ -74,12 +140,6 @@
 		<priority>0.2</priority>
 	</url>
 	<url>
-		<loc>http://item9andthemadhatters.com/live/</loc>
-		<lastmod>2012-05-04T14:56:33+00:00</lastmod>
-		<changefreq>weekly</changefreq>
-		<priority>0.2</priority>
-	</url>
-	<url>
 		<loc>http://item9andthemadhatters.com/privacy-policy/</loc>
 		<lastmod>2012-05-04T14:50:31+00:00</lastmod>
 		<changefreq>weekly</changefreq>
@@ -88,12 +148,6 @@
 	<url>
 		<loc>http://item9andthemadhatters.com/i9-iowa-rock-music-blog/</loc>
 		<lastmod>2012-05-04T14:24:35+00:00</lastmod>
-		<changefreq>weekly</changefreq>
-		<priority>0.2</priority>
-	</url>
-	<url>
-		<loc>http://item9andthemadhatters.com/contact/</loc>
-		<lastmod>2012-04-29T17:25:14+00:00</lastmod>
 		<changefreq>weekly</changefreq>
 		<priority>0.2</priority>
 	</url>

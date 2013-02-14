@@ -238,3 +238,49 @@ using old home.php"
 git pull -u
 ls
 git pull -u
+ls
+git status
+git add .
+git commit -m "adding current site files"
+git push -u
+ls
+git pull -u
+git pull-u
+git pull -u
+ls
+cd wp-content
+ls
+cd themes
+ls
+cp responsive/404.php i9-responsive-child-theme/404.php
+ls
+git push -u
+ls
+pwd
+ls
+ls -a
+nano .hta
+nano .htaccess 
+nano php.ini
+nano .htaccess 
+ls
+ls -a
+nano robots.txt 
+git clone --recursive git://github.com/wp-cli/wp-cli.git ~/git/wp-cli
+ls
+cd ../
+ls
+cd ~/git/wp-cli
+ls
+nano README.md 
+sudo utils/dev-build
+cd utils
+ls
+dev-build
+sudo dev-build
+ls
+cd wp-content/themes
+ls
+cd i9-responsive-child-theme/
+ls
+git status

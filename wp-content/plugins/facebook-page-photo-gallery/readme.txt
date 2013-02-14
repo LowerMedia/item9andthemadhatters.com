@@ -4,8 +4,8 @@ Contributors: classicon
 Tags: facebook page gallery, facebook walleria, facebook page photo, gallery, embed facebook, facebook albums, image gallery, photo gallery, fancybox, lightbox
 Donate link: http://webshasha.com
 Requires at least: 3.2
-Tested up to: 3.3.2
-Stable tag: 2.0.5
+Tested up to: 3.5
+Stable tag: 2.0.7
 
 
 Showcase your Facebook Page photos in a fancy gallery that surpasses even Facebook's.
@@ -20,18 +20,17 @@ Version 2.0 was completely rewritten and makes use of wordpress shortcodes.
 = How to use =
 * In your post just add the following  **[fbphotos id=x]** where x is the album ID
 * To specify number of photos to show use **[fbphotos id=x limit=y]** where y is the number to be shown
-* To show your album in a random manner **[fbphotos id=x rand=1]**
-* To show a  specified number of random photos from an album **[fbphotos id=x limit=y rand=1]**
 * To use in your template pages in theme development you can call the following function
-**fppg_get_photos($x,$n)** where $x is Album ID and $n is the $n of photos you want to display.
+**do_shortcode('fbphotos').
 
 = Pro Features =
 If you want to showcase any private albums you may consider **[Facebook Walleria Plugin](http://zoxion.com/walleria "Facebook Walleria")**  which you can get **[Here](http://zoxion.com/walleria "Facebook Walleria")** with features like
 
-* Facebook Events
 * Facebook Albums
-* Facebook Wall
+* Facebook Timeline
 * Facebook Photos
+* Status Widget
+* Photo Widget
 
 **[Get Facebook Walleria Plugin](http://codecanyon.net/item/facebook-walleria-wordpress-plugin/634775?ref=jmukoroyi "Facebook Walleria")** 
 
@@ -41,7 +40,7 @@ If you want to showcase any private albums you may consider **[Facebook Walleria
 * WordPress 3.2 or higher
 
 = Settings =
-* You can customise the gallery WP Admin Panel � Settings � Facebook Page Photo
+* You can customise the gallery WP Admin Panel -> Settings -> Facebook Page Photo
 
 = Language =
 
@@ -84,10 +83,14 @@ The album id is the number on the facebook after a. up to the next dot. Copy tha
 
 * For example, http://www.facebook.com/media/set/?set=a.209112642458743.46995.123369051033103 the ID is 209112642458743
 
-= Does FPPG 2.0 support the shortcode used in previous versions i.e FB-Album[] =
+= Does FPPG 2.6 support the shortcode used in previous versions i.e FB-Album[] =
 No. It now uses Wordpress shortcode [fbphotos]
 
 == Changelog ==
+= 2.0.6 =
+* Rewritten to adapt to new Facebook features
+* Added 3 sizes of thumbnails
+* Added PrettyPhoto gallery
 = 2.0.5 =
 * Minor fixes to Gallery
 = 2.0.4 =

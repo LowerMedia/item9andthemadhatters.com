@@ -3,7 +3,7 @@
 * Package: wp-photo-album-plus
 *
 * manage all options
-* Version 4.8.11
+* Version 4.9.4
 *
 */
 
@@ -50,7 +50,7 @@ global $wppa_revno;
 					$temp = $indices[$sub];
 					$indices[$sub] = $indices[$sub - '1'];
 					$indices[$sub - '1'] = $temp;
-					update_option('wppa_slide_order_split', implode(',', $indices));
+					wppa_update_option('wppa_slide_order_split', implode(',', $indices));
 				}
 				else {
 					$sequence = get_option('wppa_slide_order');
@@ -58,7 +58,7 @@ global $wppa_revno;
 					$temp = $indices[$sub];
 					$indices[$sub] = $indices[$sub - '1'];
 					$indices[$sub - '1'] = $temp;
-					update_option('wppa_slide_order', implode(',', $indices));
+					wppa_update_option('wppa_slide_order', implode(',', $indices));
 				}
 				break;
 			// Should better be here
@@ -154,7 +154,7 @@ global $wppa_revno;
 		?>
 		<script type="text/javascript">document.getElementById("wppa-ok-p").innerHTML="<strong><?php _e('READY regenerating thumbnail images.', 'wppa') ?></strong>"</script>
 		<?php				
-		update_option('wppa_lastthumb', '-2');
+		wppa_update_option('wppa_lastthumb', '-2');
 	}
 	// Check database
 //	if ( get_option('wppa_revision') != $wppa_revno ) 
@@ -367,6 +367,15 @@ global $wppa_revno;
 							$class = 'tt_normal';
 							wppa_setting($slug, '1', $name, $desc, $html, $help, $class);
 
+							$name = __('Thumbnail Size Alt', 'wppa');
+							$desc = __('The alternative size of the thumbnail images.', 'wppa');
+							$help = esc_js(__('This size applies to the width or height, whichever is the largest.', 'wppa'));
+							$help .= '\n'.esc_js(__('Changing the thumbnail size may result in all thumbnails being regenerated. this may take a while.', 'wppa'));
+							$slug = 'wppa_thumbsize_alt';
+							$html = wppa_input($slug, '40px', '', __('pixels', 'wppa'));
+							$class = 'tt_normal';
+							wppa_setting($slug, '1a', $name, $desc, $html, $help, $class);
+
 							$name = __('Thumbnail Aspect', 'wppa');
 							$desc = __('Aspect ration of thumbnail image', 'wppa');
 							$help = '';
@@ -415,6 +424,16 @@ global $wppa_revno;
 							$class = 'tt_normal';
 							wppa_setting($slug, '3', $name, $desc, $html, $help, $class);
 
+							$name = __('Thumbframe width Alt', 'wppa');
+							$desc = __('The width of the alternative thumbnail frame.', 'wppa');
+							$help = esc_js(__('Set the width of the thumbnail frame.', 'wppa'));
+							$help .= '\n\n'.esc_js(__('Set width, height and spacing for the thumbnail frames.', 'wppa'));
+							$help .= '\n'.esc_js(__('These sizes should be large enough for a thumbnail image and - optionally - the text under it.', 'wppa'));
+							$slug = 'wppa_tf_width_alt';
+							$html = wppa_input($slug, '40px', '', __('pixels wide', 'wppa'));
+							$class = 'tt_normal';
+							wppa_setting($slug, '3a', $name, $desc, $html, $help, $class);
+
 							$name = __('Thumbframe height', 'wppa');
 							$desc = __('The height of the thumbnail frame.', 'wppa');
 							$help = esc_js(__('Set the height of the thumbnail frame.', 'wppa'));
@@ -424,6 +443,16 @@ global $wppa_revno;
 							$html = wppa_input($slug, '40px', '', __('pixels high', 'wppa'));
 							$class = 'tt_normal';
 							wppa_setting($slug, '4', $name, $desc, $html, $help, $class);
+
+							$name = __('Thumbframe height Alt', 'wppa');
+							$desc = __('The height of the alternative thumbnail frame.', 'wppa');
+							$help = esc_js(__('Set the height of the thumbnail frame.', 'wppa'));
+							$help .= '\n\n'.esc_js(__('Set width, height and spacing for the thumbnail frames.', 'wppa'));
+							$help .= '\n'.esc_js(__('These sizes should be large enough for a thumbnail image and - optionally - the text under it.', 'wppa'));
+							$slug = 'wppa_tf_height_alt';
+							$html = wppa_input($slug, '40px', '', __('pixels high', 'wppa'));
+							$class = 'tt_normal';
+							wppa_setting($slug, '4a', $name, $desc, $html, $help, $class);
 
 							$name = __('Thumbnail spacing', 'wppa');
 							$desc = __('The spacing between adjacent thumbnail frames.', 'wppa');
@@ -729,6 +758,14 @@ global $wppa_revno;
 							$class = 'wppa_bc';
 							wppa_setting($slug, '3.2', $name, $desc, $html, $help, $class);
 
+							$name = __('Breadcrumb on tag result displays', 'wppa');
+							$desc = __('Show breadcrumb navigation bars on tag result displays.', 'wppa');
+							$help = esc_js(__('Indicate whether a breadcrumb navigation should be displayed above the tag result displays.', 'wppa'));
+							$slug = 'wppa_bc_on_tag';
+							$html = wppa_checkbox($slug);
+							$class = 'wppa_bc';
+							wppa_setting($slug, '3.3', $name, $desc, $html, $help, $class);
+
 							$name = __('Home', 'wppa');
 							$desc = __('Show "Home" in breadcrumb.', 'wppa');
 							$help = esc_js(__('Indicate whether the breadcrumb navigation should start with a "Home"-link', 'wppa'));
@@ -840,6 +877,16 @@ global $wppa_revno;
 							$onchange = 'wppaCheckRating()';
 							$html = wppa_checkbox($slug, $onchange);
 							wppa_setting($slug, '7', $name, $desc, $html, $help);
+							
+							$name = __('Notify inappropriate', 'wppa');
+							$desc = __('Notify admin every x times.', 'wppa');
+							$help = esc_js(__('If this number is positive, there will be a red cross icon in the rating bar.', 'wppa'));
+							$help .= '\n\n'.esc_js(__('Cicking the icon indicates a user wants to report that an image is inappropiate.', 'wppa'));
+							$help .= '\n'.esc_js(__('Admin will be notified by email after every x reports.', 'wppa'));
+							$help .= '\n'.esc_js(__('A value of 0 disables this feature.', 'wppa'));
+							$slug = 'wppa_dislike_mail_every';
+							$html = wppa_input($slug, '40px', '', __('reports', 'wppa'));
+							wppa_setting($slug, '7.1', $name, $desc, $html, $help);
 							
 							$name = __('Rating display type', 'wppa');
 							$desc = __('Specify the type of the rating display.', 'wppa');
@@ -1096,6 +1143,14 @@ global $wppa_revno;
 							$html = '<span class="wppa_rating">'.wppa_checkbox($slug).'</span>';
 							$class = 'wppa_rating_ tt_normal wppa_popup';
 							wppa_setting($slug, '6', $name, $desc, $html, $help, $class);
+							
+							$name = __('Popup comcount', 'wppa');
+							$desc = __('Display Thumbnail Comment count on popup.', 'wppa');
+							$help = esc_js(__('Display the number of comments of the photo under the thumbnail image on the popup.', 'wppa'));
+							$slug = 'wppa_popup_text_ncomments';
+							$html = wppa_checkbox($slug);
+							$class = 'tt_normal wppa_popup';
+							wppa_setting($slug, '6.1', $name, $desc, $html, $help, $class);
 							
 							$name = __('Show rating count', 'wppa');
 							$desc = __('Display the number of votes along with average ratings.', 'wppa');
@@ -2179,8 +2234,24 @@ global $wppa_revno;
 							$wppa_subtable = 'Z';
 							
 							// Linktypes
-							$options_linktype = array(__('no link at all.', 'wppa'), __('the plain photo (file).', 'wppa'), __('the full size photo in a slideshow.', 'wppa'), __('the fullsize photo on its own.', 'wppa'), __('the fs photo with download and print buttons.', 'wppa'), __('lightbox.', 'wppa'));
-							$values_linktype = array('none', 'file', 'photo', 'single', 'fullpopup', 'lightbox'); //, 'indiv');
+							$options_linktype = array(
+								__('no link at all.', 'wppa'), 
+								__('the plain photo (file).', 'wppa'), 
+								__('the full size photo in a slideshow.', 'wppa'), 
+								__('the fullsize photo on its own.', 'wppa'), 
+								__('the single photo in the style of a slideshow.', 'wppa'),
+								__('the fs photo with download and print buttons.', 'wppa'), 
+								__('lightbox.', 'wppa')
+							);
+							$values_linktype = array(
+								'none', 
+								'file', 
+								'photo', 
+								'single', 
+								'slphoto', 
+								'fullpopup', 
+								'lightbox'
+							);
 							$options_linktype_album = array(__('no link at all.', 'wppa'), __('the plain photo (file).', 'wppa'), __('the content of the album.', 'wppa'), __('the full size photo in a slideshow.', 'wppa'), __('the fullsize photo on its own.', 'wppa'), __('lightbox.', 'wppa'));
 							$values_linktype_album = array('none', 'file', 'album', 'photo', 'single', 'lightbox'); //, 'indiv');
 							$options_linktype_ss_widget = array(__('no link at all.', 'wppa'), __('the plain photo (file).', 'wppa'), __('defined at widget activation.', 'wppa'), __('the content of the album.', 'wppa'), __('the full size photo in a slideshow.', 'wppa'), __('the fullsize photo on its own.', 'wppa')); //, __('the photo specific link.', 'wppa'));
@@ -2232,6 +2303,7 @@ global $wppa_revno;
 							$help .= '\n\n'.esc_js(__('If you select \'defined on widget admin page\' you can manually enter a link and title on the Photo of the day Widget Admin page.', 'wppa'));
 							$slug1 = 'wppa_widget_linktype';
 							$slug2 = 'wppa_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_potd_blank';
 							$slug4 = 'wppa_potdwidget_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2252,6 +2324,7 @@ global $wppa_revno;
 							$help = esc_js(__('Select the type of link the slideshow photos point to.', 'wppa')); 
 							$slug1 = 'wppa_slideonly_widget_linktype';
 							$slug2 = 'wppa_slideonly_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_sswidget_blank';
 							$slug4 = 'wppa_sswidget_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2272,6 +2345,7 @@ global $wppa_revno;
 							$help = esc_js(__('Select the type of link the album widget photos point to.', 'wppa'));
 							$slug1 = 'wppa_album_widget_linktype'; 
 							$slug2 = 'wppa_album_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_album_widget_blank';
 						//	$slug4 = 'wppa_album_widget_overrule';	// useless
 							$slug = array($slug1, $slug2, $slug3);
@@ -2294,6 +2368,7 @@ global $wppa_revno;
 							$help = esc_js(__('Select the type of link the thumbnail photos point to.', 'wppa')); 
 							$slug1 = 'wppa_thumbnail_widget_linktype'; 
 							$slug2 = 'wppa_thumbnail_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_thumbnail_widget_blank';
 							$slug4 = 'wppa_thumbnail_widget_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2314,6 +2389,7 @@ global $wppa_revno;
 							$help = esc_js(__('Select the type of link the top ten photos point to.', 'wppa')); 
 							$slug1 = 'wppa_topten_widget_linktype'; 
 							$slug2 = 'wppa_topten_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_topten_blank';
 							$slug4 = 'wppa_topten_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2335,6 +2411,7 @@ global $wppa_revno;
 							$help = esc_js(__('Select the type of link the last ten photos point to.', 'wppa')); 
 							$slug1 = 'wppa_lasten_widget_linktype'; 
 							$slug2 = 'wppa_lasten_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_lasten_blank';
 							$slug4 = 'wppa_lasten_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2355,6 +2432,7 @@ global $wppa_revno;
 							$help = esc_js(__('Select the type of link the comment widget photos point to.', 'wppa')); 
 							$slug1 = 'wppa_comment_widget_linktype'; 
 							$slug2 = 'wppa_comment_widget_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_comment_blank';
 							$slug4 = 'wppa_comment_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2381,6 +2459,7 @@ global $wppa_revno;
 							$help .= '\n'.esc_js(__('except when Ajax is activated on Table IV-A1.', 'wppa'));
 							$slug1 = 'wppa_coverimg_linktype';
 							$slug2 = 'wppa_coverimg_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_coverimg_blank';
 							$slug4 = 'wppa_coverimg_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2401,6 +2480,7 @@ global $wppa_revno;
 							$help .= '\n'.esc_js(__('Note that a page must have at least %%wppa%% or [wppa][/wppa] in its content to show up the photo(s).', 'wppa'));
 							$slug1 = 'wppa_thumb_linktype';
 							$slug2 = 'wppa_thumb_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_thumb_blank';
 							$slug4 = 'wppa_thumb_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2423,6 +2503,7 @@ global $wppa_revno;
 							$help .= '\n'.esc_js(__('Note that a page must have at least %%wppa%% or [wppa][/wppa] in its content to show up the photo(s).', 'wppa')); 
 							$slug1 = 'wppa_sphoto_linktype';
 							$slug2 = 'wppa_sphoto_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_sphoto_blank';
 							$slug4 = 'wppa_sphoto_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2445,6 +2526,7 @@ global $wppa_revno;
 							$help .= '\n'.esc_js(__('Note that a page must have at least %%wppa%% or [wppa][/wppa] in its content to show up the photo(s).', 'wppa')); 
 							$slug1 = 'wppa_mphoto_linktype';
 							$slug2 = 'wppa_mphoto_linkpage';
+							wppa_verify_page($slug2);
 							$slug3 = 'wppa_mphoto_blank';
 							$slug4 = 'wppa_mphoto_overrule';
 							$slug = array($slug1, $slug2, $slug3, $slug4);
@@ -2507,6 +2589,52 @@ global $wppa_revno;
 							$values = array('file', 'zip');
 							$html = wppa_select($slug, $options, $values);
 							wppa_setting($slug, '2', $name, $desc, $html.'</td><td></td><td></td><td>', $help);
+							
+							$name = __('Tagcloud Link', 'wppa');
+							$desc = __('Configure the link from the tags in the tag cloud.', 'wppa');
+							$help = esc_js(__('Link the tag words to ether the thumbnails or the slideshow.', 'wppa'));
+							$slug1 = 'wppa_tagcloud_linktype';
+							$slug2 = 'wppa_tagcloud_linkpage';
+							wppa_verify_page($slug2);
+							$slug3 = 'wppa_tagcloud_blank';
+							$slug4 = '';
+							$slug = array($slug1, $slug2, $slug3, $slug4);
+							$opts = array(__('thumbnails', 'wppa'), __('slideshow', 'wppa'));
+							$vals = array('album', 'slide'); 
+							$onchange = 'wppaCheckTagLink(); wppaCheckLinkPageErr(\'tagcloud\');';
+							$html1 = wppa_select($slug1, $opts, $vals, $onchange);						
+							$class = 'wppa_tglp';
+							$onchange = 'wppaCheckLinkPageErr(\'tagcloud\');';
+							$html2 = wppa_select($slug2, $options_page, $values_page, $onchange, $class, true);
+							$class = 'wppa_tglb';
+							$html3 = wppa_checkbox($slug3, '', $class);
+							$html4 = '';
+							$htmlerr = wppa_htmlerr('tagcloud');
+							$html = array($html1, $htmlerr.$html2, $html3, $html4);
+							wppa_setting($slug, '3a,b,c', $name, $desc, $html, $help);
+
+							$name = __('Multitag Link', 'wppa');
+							$desc = __('Configure the link from the multitag selection.', 'wppa');
+							$help = esc_js(__('Link to ether the thumbnails or the slideshow.', 'wppa'));
+							$slug1 = 'wppa_multitag_linktype';
+							$slug2 = 'wppa_multitag_linkpage';
+							wppa_verify_page($slug2);
+							$slug3 = 'wppa_multitag_blank';
+							$slug4 = '';
+							$slug = array($slug1, $slug2, $slug3, $slug4);
+							$opts = array(__('thumbnails', 'wppa'), __('slideshow', 'wppa'));
+							$vals = array('album', 'slide'); 
+							$onchange = 'wppaCheckMTagLink(); wppaCheckLinkPageErr(\'multitag\');';
+							$html1 = wppa_select($slug1, $opts, $vals, $onchange);						
+							$class = 'wppa_tglp';
+							$onchange = 'wppaCheckLinkPageErr(\'multitag\');';
+							$html2 = wppa_select($slug2, $options_page, $values_page, $onchange, $class, true);
+							$class = 'wppa_tglb';
+							$html3 = wppa_checkbox($slug3, '', $class);
+							$html4 = '';
+							$htmlerr = wppa_htmlerr('multitag');
+							$html = array($html1, $htmlerr.$html2, $html3, $html4);
+							wppa_setting($slug, '4a,b,c', $name, $desc, $html, $help);
 							
 							?>
 						</tbody>
@@ -2621,6 +2749,13 @@ global $wppa_revno;
 							$slug = 'wppa_upload_moderate';
 							$html = wppa_checkbox($slug);
 							wppa_setting($slug, '3', $name, $desc, $html, $help);
+
+							$name = __('Upload notify', 'wppa');
+							$desc = __('Notify admin at frontend upload.', 'wppa');
+							$help = esc_js(__('If checked, admin will receive a notification by email.', 'wppa'));
+							$slug = 'wppa_upload_notify';
+							$html = wppa_checkbox($slug);
+							wppa_setting($slug, '3.0', $name, $desc, $html, $help);
 							
 							$name = __('Upload memory check frontend', 'wppa');
 							$desc = __('Disable uploading photos that are too large.', 'wppa');
@@ -3221,6 +3356,13 @@ global $wppa_revno;
 							$html = wppa_input($slug, '50px', '', __('points per vote', 'wppa'));
 							wppa_setting($slug, '2', $name, $desc, $html, $help);
 							
+							$name = __('Cube Points Upload', 'wppa');
+							$desc = __('Number of points for a successfull frontend upload', 'wppa');
+							$help = esc_js(__('This setting requires the plugin Cube Points', 'wppa'));
+							$slug = 'wppa_cp_points_upload';
+							$html = wppa_input($slug, '50px', '', __('points per upload', 'wppa'));
+							wppa_setting($slug, '3', $name, $desc, $html, $help);
+							
 							wppa_setting_subheader('G', '1', __('QR Code widget settings. The colors also apply to the QR code in the Share box.', 'wppa'));
 							
 							$name = __('QR size', 'wppa');
@@ -3812,4 +3954,19 @@ function wppa_htmlerr($slug) {
 					'onmouseout="jQuery(this).animate({width: 16, height:16}, 200)" />';
 	
 	return $result;
+}
+
+function wppa_verify_page($slug) {
+global $wpdb;
+global $wppa_opt;
+
+	if ( ! isset($wppa_opt[$slug]) ) {
+		wppa_err_msg('Unexpected error in wppa_verify_page()', 'red', 'force');
+		return;
+	}
+	$iret = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM `" . $wpdb->posts . "` WHERE `post_type` = 'page' AND `post_status` = 'publish' AND `ID` = %s", $wppa_opt[$slug]));
+	if ( ! $iret ) {
+		$wppa_opt[$slug] = '0';
+		wppa_update_option($slug, '0');
+	}
 }

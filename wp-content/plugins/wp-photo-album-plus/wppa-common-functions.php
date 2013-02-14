@@ -2,11 +2,11 @@
 /* wppa-common-functions.php
 *
 * Functions used in admin and in themes
-* version 4.8.12
+* version 4.9.6
 *
 */
 global $wppa_api_version;
-$wppa_api_version = '4-8-12-000';
+$wppa_api_version = '4-9-6-000';
 // Initialize globals and option settings
 function wppa_initialize_runtime($force = false) {
 global $wppa;
@@ -86,7 +86,8 @@ global $wppa_initruntimetime;
 			'is_single'					=> false,
 			'is_landing'				=> '0',
 			'is_comten'					=> false,
-			'comten_count'				=> '0'
+			'comten_count'				=> '0',
+			'is_tag'					=> false
 
 		);
 
@@ -95,7 +96,14 @@ global $wppa_initruntimetime;
 
 	}
 	
-	if (!is_array($wppa_opt)) {
+	if ( is_admin() ) {
+		$wppa_opt = get_option('wppa_cached_options_admin', false);
+	}
+	else {
+		$wppa_opt = get_option('wppa_cached_options', false);
+	}
+				
+	if ( ! is_array($wppa_opt) ) {
 		$wppa_opt = array ( 'wppa_revision' 			=> '',
 							'wppa_prevrev'				=> '',
 	
@@ -118,9 +126,12 @@ global $wppa_initruntimetime;
 						'wppa_mini_treshold'			=> '',
 						// C Thumbnails
 						'wppa_thumbsize' 				=> '',	// 1
+						'wppa_thumbsize_alt' 			=> '',	// 1a
 						'wppa_thumb_aspect'				=> '',	// 2
 						'wppa_tf_width' 				=> '',	// 3
+						'wppa_tf_width_alt' 			=> '',	// 3a
 						'wppa_tf_height' 				=> '',	// 4
+						'wppa_tf_height_alt' 			=> '',	// 4a
 						'wppa_tn_margin' 				=> '',	// 5
 						'wppa_thumb_auto' 				=> '',	// 6
 						'wppa_thumb_page_size' 			=> '',	// 7
@@ -160,6 +171,7 @@ global $wppa_initruntimetime;
 						'wppa_bc_on_topten'					=> '',	// 3
 						'wppa_bc_on_lasten'					=> '',	// 3
 						'wppa_bc_on_comten'					=> '',	// 3
+						'wppa_bc_on_tag'					=> '',	// 3
 						'wppa_show_home' 					=> '',	// 4
 						'wppa_show_page' 					=> '',	// 4
 						'wppa_bc_separator' 				=> '',	// 5
@@ -175,6 +187,7 @@ global $wppa_initruntimetime;
 						'wppa_show_full_desc' 				=> '',	// 6
 						'wppa_hide_when_empty'				=> '',	// 6.1
 						'wppa_rating_on' 					=> '',	// 7
+						'wppa_dislike_mail_every'			=> '',	// 7.1
 						'wppa_rating_display_type'			=> '',	// 8
 						'wppa_show_avg_rating'				=> '',	// 9
 						'wppa_show_comments' 				=> '',	// 10
@@ -208,6 +221,7 @@ global $wppa_initruntimetime;
 						'wppa_popup_text_desc' 				=> '',	// 5
 						'wppa_popup_text_desc_strip'		=> '',	// 5.1
 						'wppa_popup_text_rating' 			=> '',	// 6
+						'wppa_popup_text_ncomments'			=> '',
 						'wppa_show_rating_count'			=> '',	// 7
 						'wppa_albdesc_on_thumbarea'			=> '',
 						// D Covers
@@ -424,12 +438,21 @@ global $wppa_initruntimetime;
 						'wppa_album_widget_linkpage'		=> '',
 						'wppa_album_widget_blank'			=> '',
 
+						'wppa_tagcloud_linktype'			=> '',
+						'wppa_tagcloud_linkpage'			=> '',
+						'wppa_tagcloud_blank'				=> '',
+
+						'wppa_multitag_linktype'			=> '',
+						'wppa_multitag_linkpage'			=> '',
+						'wppa_multitag_blank'				=> '',
+
 						// Table VII: Security
 						// B
 						'wppa_user_upload_login'	=> '',
 						'wppa_owner_only' 			=> '',
 						'wppa_user_upload_on'		=> '',
 						'wppa_upload_moderate'		=> '',
+						'wppa_upload_notify' 		=> '',
 						'wppa_memcheck_frontend'	=> '',
 						'wppa_memcheck_admin'		=> '',
 						'wppa_comment_captcha'		=> '',
@@ -461,6 +484,7 @@ global $wppa_initruntimetime;
 						'wppa_meta_all'					=> '',	// 10
 						'wppa_cp_points_comment'		=> '',
 						'wppa_cp_points_rating'			=> '',
+						'wppa_cp_points_upload'			=> '',
 
 						'wppa_use_wp_editor'			=> '',	//A 11
 						'wppa_hier_albsel' 				=> '',
@@ -523,7 +547,15 @@ global $wppa_initruntimetime;
 
 
 		);
+		
 		array_walk($wppa_opt, 'wppa_set_options');
+		
+		if ( is_admin() ) {
+			update_option('wppa_cached_options_admin', $wppa_opt);
+		}
+		else {
+			update_option('wppa_cached_options', $wppa_opt);
+		}
 	}
 	
 	if (isset($_GET['debug']) && $wppa_opt['wppa_allow_debug']) {
@@ -559,7 +591,7 @@ global $wppa_initruntimetime;
 		$time = time();
 		$obsolete = $time - $spammaxage;
 		$iret = $wpdb->query($wpdb->prepare( "DELETE FROM `".WPPA_COMMENTS."` WHERE `status` = 'spam' AND `timestamp` < %s", $obsolete));
-		update_option('wppa_spam_auto_delcount', get_option('wppa_spam_auto_delcount', '0') + $iret);
+		if ( $iret ) wppa_update_option('wppa_spam_auto_delcount', get_option('wppa_spam_auto_delcount', '0') + $iret);
 	}
 	
 	// Create an album if required
@@ -576,7 +608,7 @@ global $wppa_initruntimetime;
 				$desc = __('Default photo album for', 'wppa').' '.$user;
 				$uplim = $wppa_opt['wppa_upload_limit_count'].'/'.$wppa_opt['wppa_upload_limit_time'];
 				$parent = $wppa_opt['wppa_grant_parent'];
-				$query = $wpdb->prepare('INSERT INTO `' . WPPA_ALBUMS . '` (`id`, `name`, `description`, `a_order`, `a_parent`, `p_order_by`, `main_photo`, `cover_linktype`, `cover_linkpage`, `owner`, `timestamp`, `upload_limit`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)', $id, $name, $desc, '0', $parent, '0', '0', 'content', '0', $owner, time(), $uplim);
+				$query = $wpdb->prepare('INSERT INTO `' . WPPA_ALBUMS . '` (`id`, `name`, `description`, `a_order`, `a_parent`, `p_order_by`, `main_photo`, `cover_linktype`, `cover_linkpage`, `owner`, `timestamp`, `upload_limit`, `alt_thumbsize`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)', $id, $name, $desc, '0', $parent, '0', '0', 'content', '0', $owner, time(), $uplim, '0');
 				$iret = $wpdb->query($query);
 
 			}
@@ -959,7 +991,7 @@ global $wpdb;
 	while ( ! wppa_is_id_free($table, $result) ) {
 		$result++;
 	}
-	update_option($name, $result);
+	wppa_update_option($name, $result);
 	return $result;
 }
 
@@ -1138,6 +1170,9 @@ global $wppa_opt;
 	
 	$tmp = get_option('wppa_thumbsize', 'nil');
 	if (is_numeric($tmp) && $tmp > $result) $result = $tmp;
+
+	$tmp = get_option('wppa_thumbsize_alt', 'nil');
+	if (is_numeric($tmp) && $tmp > $result) $result = $tmp;
 	
 	$tmp = get_option('wppa_smallsize', 'nil');
 	if ( $wppa_opt['wppa_coversize_is_height'] ) {
@@ -1311,7 +1346,7 @@ global $wppa;
 		$src = $_GET['s'];
 	}
 
-	return stripslashes($src);
+	return strip_tags(stripslashes($src));
 }
 
 function wppa_get_water_file_and_pos() {
