@@ -628,4 +628,20 @@ html body.home div#page.hfeed div#main div#primary-home div#content-home font ma
     color: #FFFFFF;
 }
 
+
+
+
+
+body.page-id-6 select, body.page-id-6 input[type="text"], body.page-id-6 input[type="password"],  input[type="email"] {
+	width:40%;
+}
+
+#contact-form-button  input {margin-top: 60px;}
+
+
+
+
+
+
+
 /*The last 29 days of the month are the hardest."- Nikola Tesla*/
